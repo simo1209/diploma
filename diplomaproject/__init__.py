@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-app.config.from_object('flaskr.config.DevelopmentConfig')
+app.config.from_object('diplomaproject.config.DevelopmentConfig')
 
 login_manager = LoginManager()
 login_manager.init_app(app)

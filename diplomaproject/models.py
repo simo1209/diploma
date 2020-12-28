@@ -1,6 +1,6 @@
 import datetime
 
-from flaskr import app, db, bcrypt
+from diplomaproject import app, db, bcrypt
 
 
 class Address(db.Model):
