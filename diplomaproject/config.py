@@ -7,6 +7,7 @@ class BaseConfig(object):
     DEBUG = False
     BCRYPT_LOG_ROUNDS = 10
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = True
 
 
 class DevelopmentConfig(BaseConfig):
