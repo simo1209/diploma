@@ -1,14 +1,14 @@
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp, Optional
 
 
-class LoginForm(Form):
+class LoginForm(FlaskForm):
     email = StringField('Email Address', [DataRequired(), Email()])
     password = PasswordField('Password', [DataRequired()])
 
 
-class RegisterForm(Form):
+class RegisterForm(FlaskForm):
     email = StringField(
         'Email Address',
         validators=[DataRequired(), Email(message=None), Length(min=6, max=40)])
