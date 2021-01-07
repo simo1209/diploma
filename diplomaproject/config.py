@@ -13,4 +13,4 @@ class BaseConfig(object):
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     BCRYPT_LOG_ROUNDS = 4
-    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost:5432/qrpayment'
+    SQLALCHEMY_DATABASE_URI = 'postgresql:///qrpayment'

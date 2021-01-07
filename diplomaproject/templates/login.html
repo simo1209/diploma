@@ -1,0 +1,17 @@
+<h1>Login</h1>
+
+<form role="form" method="post" action="">
+
+    {{ form.csrf_token }}
+    {{ form.hidden_tag() }}
+    {{ wtf.form_errors(form, hiddens="only") }}
+
+
+
+    {{ wtf.form_field(form.email) }}
+    {{ wtf.form_field(form.password) }}
+
+    <button type="submit">Sign In</button>
+    <a href="{{ url_for('user.register') }}">Register</a>
+
+</form>
