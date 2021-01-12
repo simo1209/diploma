@@ -27,6 +27,8 @@ def register():
         )
 
         user_account = UserAccount(
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
             email=form.email.data,
             password=form.password.data,
             phone=form.phone.data,
@@ -48,11 +50,11 @@ def register():
 def login():
     form = LoginForm(request.form)
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = UserAccount.query.filter_by(email=form.email.data).first()
         if user and bcrypt.check_password_hash(
                 user.password, request.form['password']):
             login_user(user)
             return "Authenticated", 200
         else:
-            return render_template('user/login.html', form=form)
-    return render_template('user/login.html', title='Please Login', form=form)
+            return render_template('login.html', form=form)
+    return render_template('login.html', title='Please Login', form=form)

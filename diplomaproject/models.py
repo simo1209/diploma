@@ -34,13 +34,15 @@ class UserAccount(db.Model):
     registered_on = db.Column(db.DateTime, nullable=False)
     phone = db.Column(db.String(10), nullable=False)
     address_id = db.Column(db.Integer, db.ForeignKey('address.id'),
-        nullable=False)
+                           nullable=False)
     address = db.relationship('Address',
-        backref=db.backref('user_accounts', lazy=True))
+                              backref=db.backref('user_accounts', lazy=True))
 
     UCN = db.Column(db.String(10), nullable=False)
 
-    def __init__(self, email, password, phone, address, UCN):
+    def __init__(self, first_name, last_name,  email, password, phone, address, UCN):
+        self.first_name = first_name
+        self.last_name = last_name
         self.email = email
         self.password = bcrypt.generate_password_hash(
             password, app.config.get('BCRYPT_LOG_ROUNDS')
@@ -64,6 +66,7 @@ class UserAccount(db.Model):
 
     def __repr__(self):
         return '<UserAccount {0}>'.format(self.email)
+
 
 db.drop_all()
 db.create_all()
