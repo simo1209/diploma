@@ -12,8 +12,6 @@ user_blueprint = Blueprint('user', __name__)
 
 @user_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
-    print(request.form)
-    print(type(request.form))
     form = RegisterForm(request.form)
 
     if form.validate_on_submit():
