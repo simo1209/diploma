@@ -1,4 +1,4 @@
-{% extends '_base.html' %}
+{% extends 'base.html' %}
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block content %}
@@ -19,12 +19,21 @@
 
     <div class="col-lg-4 col-sm-4">
 
+      {{ wtf.form_field(form.first_name) }}
+      {{ wtf.form_field(form.last_name) }}
       {{ wtf.form_field(form.email) }}
       {{ wtf.form_field(form.password) }}
       {{ wtf.form_field(form.confirm) }}
+      {{ wtf.form_field(form.phone) }}
+      {{ wtf.form_field(form.UCN) }}
+      {{ wtf.form_field(form.country) }}
+      {{ wtf.form_field(form.city) }}
+      {{ wtf.form_field(form.address1) }}
+      {{ wtf.form_field(form.address2) }}
+      {{ wtf.form_field(form.postal_code) }}
+
 
       <button class="btn btn-success" type="submit">Register</button>
-      <br><br>
       <a href="{{ url_for('user.login') }}">Sign in</a>
 
     </div>

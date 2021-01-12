@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required
 
 from diplomaproject import bcrypt, db
 from diplomaproject.models import UserAccount
+from diplomaproject.models import Address
 from diplomaproject.user.forms import LoginForm, RegisterForm
 
 
@@ -13,30 +14,37 @@ user_blueprint = Blueprint('user', __name__)
 def register():
     print(request.form)
     print(type(request.form))
-    form = RegisterForm(request.form    )
+    form = RegisterForm(request.form)
 
     if form.validate_on_submit():
+
+        address = Address(
+            addr_1=form.address1.data,
+            addr_2=form.address2.data,
+            city=form.city.data,
+            country=form.country.data,
+            postal_code=form.postal_code.data
+        )
+
         user_account = UserAccount(
             email=form.email.data,
             password=form.password.data,
             phone=form.phone.data,
             UCN=form.UCN.data,
-            country=form.country.data,
-            city=form.city.data,
-            addr_1=form.address1.data,
-            addr_2=form.address2.data,
-            postal_code=form.postal_code.data
+            address=address
         )
 
-        db.session.add(user)
+        db.session.add(address)
+        db.session.add(user_account)
         db.session.commit()
 
-        login_user(user)
+        login_user(user_account)
 
         return "Successfully Registered", 201
     return render_template('register.html', form=form)
 
-@user_blueprint.route('/login', methods=['GET','POST'])
+
+@user_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm(request.form)
     if form.validate_on_submit():
