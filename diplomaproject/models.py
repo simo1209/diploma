@@ -68,5 +68,4 @@ class UserAccount(db.Model):
         return '<UserAccount {0}>'.format(self.email)
 
 
-db.drop_all()
 db.create_all()
