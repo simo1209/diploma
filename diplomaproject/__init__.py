@@ -18,15 +18,15 @@ db = SQLAlchemy(app)
 bootstrap = Bootstrap(app)
 
 
-from diplomaproject.models import UserAccount
+from diplomaproject.models import Account
 
 login_manager.login_view = "user.login"
 login_manager.login_message_category = 'danger'
 
 
 @login_manager.user_loader
-def load_user(user_id):
-    return UserAccount.query.filter(UserAccount.id == int(user_id)).first()
+def load_user(account_id):
+    return Account.query.filter(Account.id == int(account_id)).first()
 
 
 from diplomaproject.user.views import user_blueprint

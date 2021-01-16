@@ -22,9 +22,9 @@ class Address(db.Model):
         return '<Address {0}>'.format(self.address_1)
 
 
-class UserAccount(db.Model):
+class Account(db.Model):
 
-    __tablename__ = 'user_accounts'
+    __tablename__ = 'accounts'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.Text, nullable=False)
@@ -36,7 +36,7 @@ class UserAccount(db.Model):
     address_id = db.Column(db.Integer, db.ForeignKey('address.id'),
                            nullable=False)
     address = db.relationship('Address',
-                              backref=db.backref('user_accounts', lazy=True))
+                              backref=db.backref('accounts', lazy=True))
 
     UCN = db.Column(db.String(10), nullable=False)
 
@@ -65,7 +65,7 @@ class UserAccount(db.Model):
         return self.id
 
     def __repr__(self):
-        return '<UserAccount {0}>'.format(self.email)
+        return '<Account {0}>'.format(self.email)
 
 
 db.create_all()
