@@ -1,6 +1,16 @@
 import os
+
+from flask import json
+import decimal
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+class CustomJSONEncoder(json.JSONEncoder): #Encode Account balance to string
+
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+        return super(CustomJSONEncoder, self).default(obj)
 
 class BaseConfig(object):
     SECRET_KEY = 'secret'

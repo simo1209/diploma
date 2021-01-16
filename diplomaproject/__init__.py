@@ -3,10 +3,15 @@ from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
+from flask import json
+
+from diplomaproject.config import CustomJSONEncoder
 
 app = Flask(__name__)
 
 app.config.from_object('diplomaproject.config.DevelopmentConfig')
+
+app.json_encoder = CustomJSONEncoder
 
 login_manager = LoginManager()
 login_manager.init_app(app)
