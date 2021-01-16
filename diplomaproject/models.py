@@ -31,7 +31,8 @@ class Account(db.Model):
     last_name = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
-    registered_on = db.Column(db.DateTime, nullable=False)
+    registered_on = db.Column(
+        db.DateTime, nullable=False, server_default=db.text('NOW()'))
     phone = db.Column(db.String(10), nullable=False)
     address_id = db.Column(db.Integer, db.ForeignKey('address.id'),
                            nullable=False)
@@ -39,6 +40,7 @@ class Account(db.Model):
                               backref=db.backref('accounts', lazy=True))
 
     UCN = db.Column(db.String(10), nullable=False)
+    balance = db.Column(db.Numeric, nullable=False, server_default='0.0')
 
     def __init__(self, first_name, last_name,  email, password, phone, address, UCN):
         self.first_name = first_name
@@ -47,7 +49,6 @@ class Account(db.Model):
         self.password = bcrypt.generate_password_hash(
             password, app.config.get('BCRYPT_LOG_ROUNDS')
         ).decode('utf-8')
-        self.registered_on = datetime.datetime.now()
         self.phone = phone
         self.address = address
         self.UCN = UCN
