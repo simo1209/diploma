@@ -1,5 +1,5 @@
-from flask import render_template, Blueprint, request
-from flask_login import login_user, logout_user, login_required
+from flask import render_template, Blueprint, request, jsonify
+from flask_login import login_user, logout_user, login_required, current_user
 
 from diplomaproject import bcrypt, db
 from diplomaproject.models import Account
@@ -56,3 +56,9 @@ def login():
         else:
             return render_template('login.html', form=form)
     return render_template('login.html', title='Please Login', form=form)
+
+
+@user_blueprint.route('/account', methods=['GET'])
+@login_required
+def get_account():
+    return jsonify(current_user.query.with_entities(Account.first_name, Account.last_name, Account.email, Account.balance).first())
