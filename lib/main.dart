@@ -18,7 +18,6 @@ class Login extends StatelessWidget {
         body: LoginPage(),
       ),
       routes: <String, WidgetBuilder>{
-        '/': (_) => new Login(), // Login Page
         '/account': (_) => new AccountWidget(),
         '/signUp': (_) => new SignUp(),
         // '/forgotPassword': (_) => new ForgotPwd(),
@@ -126,6 +125,7 @@ class _LoginPageState extends State<LoginPage> {
       var response = await Session.login(email, password);
 
       if (response.statusCode == 200) {
+        Session.updateCookie(response);
         Navigator.of(context).pushNamed('/account');
       }
     }
@@ -144,7 +144,7 @@ class SignUp extends StatelessWidget {
         body: SignUp(),
       ),
       routes: <String, WidgetBuilder>{
-        '/': (_) => new Login(), // Login Page
+        // '/': (_) => new Login(), // Login Page
         '/account': (_) => new AccountWidget(),
         '/signUp': (_) => new SignUp(),
         // '/forgotPassword': (_) => new ForgotPwd(),
@@ -251,7 +251,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   if (value.isEmpty) {
                     return 'Please enter some text';
                   }
-                  if (value.compareTo(passwordController.text) != 0){
+                  if (value.compareTo(passwordController.text) != 0) {
                     return 'Passwords must match';
                   }
                   return null;
@@ -361,7 +361,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future _signup(context) async {
     if (_formKey.currentState.validate()) {
-
       var fields = {
         'email': emailController.text,
         'password': passwordController.text,

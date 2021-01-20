@@ -1,11 +1,14 @@
 import 'dart:convert';
 
 import 'package:diploma_project/session.dart';
+import 'package:diploma_project/transaction-details.dart';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:qrscan/qrscan.dart' as scanner;
+
 
 class Account {
-
   final String firstName;
   final String lastName;
   final String email;
@@ -18,7 +21,7 @@ class Account {
       firstName: json['first_name'],
       lastName: json['last_name'],
       email: json['email'],
-      balance: json['balance'],
+      balance: double.parse(json['balance']),
     );
   }
 
@@ -39,6 +42,10 @@ class AccountWidget extends StatelessWidget {
         appBar: AppBar(title: const Text(_title)),
         body: AccountPage(),
       ),
+      routes: <String, WidgetBuilder>{
+        '/transactionDetails': (_) => new TransactionDetailsWidget(),
+        // '/forgotPassword': (_) => new ForgotPwd(),
+      },
     );
   }
 }
@@ -51,17 +58,35 @@ class AccountPage extends StatefulWidget {
 class AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: getAccountInformation(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return createAccountWidget(context, snapshot.data);
-        } else if (snapshot.hasError) {
-          return Text(snapshot.error.toString());
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
+    return Column(
+      children: [
+        FutureBuilder(
+          future: getAccountInformation(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return createAccountWidget(context, snapshot.data);
+            } else if (snapshot.hasError) {
+              return Text(snapshot.error.toString());
+            } else {
+              return CircularProgressIndicator();
+            }
+          },
+        ),
+        Column(
+          children: [
+            RaisedButton(
+              child: Text('Scan Code', style: TextStyle(fontSize: 24)),
+              onPressed: _scan,
+              color: Colors.lightBlue,
+              textColor: Colors.white,
+            ),
+            RaisedButton(
+              child: Text('Create Code', style: TextStyle(fontSize: 24)),
+              onPressed: () => {},
+            ),
+          ],
+        )
+      ],
     );
   }
 
@@ -71,8 +96,7 @@ class AccountPageState extends State<AccountPage> {
   }
 
   Widget createAccountWidget(BuildContext context, Response data) {
-
-    if(data.statusCode == 200){
+    if (data.statusCode == 200) {
       Account account = Account.fromJson(jsonDecode(data.body));
       return Column(
         children: <Widget>[
@@ -89,7 +113,7 @@ class AccountPageState extends State<AccountPage> {
             height: 2.0,
           ),
           ListTile(
-            title: Text('Balance: ${account.balance.toString()}'),
+            title: Text('Balance: ${account.balance}'),
           ),
           Divider(
             height: 2.0,
@@ -98,6 +122,12 @@ class AccountPageState extends State<AccountPage> {
       );
     }
     return Text(data.body);
+  }
 
+  Future _scan() async {
+    print('Scanning');
+    String data = await scanner.scan(); // Read the QR encoded string
+    print(data);
+    Navigator.of(context).pushNamed('/transactionDetails', arguments: {'data':data});
   }
 }
