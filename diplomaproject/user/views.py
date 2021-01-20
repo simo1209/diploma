@@ -54,11 +54,17 @@ def login():
             login_user(account)
             return "Authenticated", 200
         else:
-            return render_template('login.html', form=form)
+            return render_template('login.html', form=form), 401
     return render_template('login.html', title='Please Login', form=form)
 
 
 @user_blueprint.route('/account', methods=['GET'])
 @login_required
 def get_account():
-    return jsonify(current_user.query.with_entities(Account.first_name, Account.last_name, Account.email, Account.balance).first())
+    return jsonify(
+        current_user.query.with_entities(
+            Account.first_name, 
+            Account.last_name, 
+            Account.email, 
+            Account.balance).first()._asdict()
+        )
