@@ -1,6 +1,8 @@
 import 'package:diploma_project/account.dart';
 import 'package:diploma_project/session.dart';
 import 'package:flutter/material.dart';
+import 'package:diploma_project/transaction-details.dart';
+
 
 void main() {
   runApp(Login());
@@ -20,6 +22,8 @@ class Login extends StatelessWidget {
       routes: <String, WidgetBuilder>{
         '/account': (_) => new AccountWidget(),
         '/signUp': (_) => new SignUp(),
+        '/transactionDetails': (_) => new TransactionDetailsWidget(),
+
         // '/forgotPassword': (_) => new ForgotPwd(),
       },
     );
@@ -137,18 +141,9 @@ class SignUp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: _title,
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: const Text(_title)),
         body: SignUp(),
-      ),
-      routes: <String, WidgetBuilder>{
-        // '/': (_) => new Login(), // Login Page
-        '/account': (_) => new AccountWidget(),
-        '/signUp': (_) => new SignUp(),
-        // '/forgotPassword': (_) => new ForgotPwd(),
-      },
     );
   }
 }

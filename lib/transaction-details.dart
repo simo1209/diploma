@@ -12,8 +12,8 @@ class Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      transactionDesc: json['transaction_desc'],
-      amount: json['amount'],
+      transactionDesc: json['description'],
+      amount: double.parse(json['amount']),
     );
   }
 

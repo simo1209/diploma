@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:diploma_project/session.dart';
-import 'package:diploma_project/transaction-details.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
@@ -36,16 +35,9 @@ class AccountWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: _title,
-      home: Scaffold(
+      return Scaffold(
         appBar: AppBar(title: const Text(_title)),
         body: AccountPage(),
-      ),
-      routes: <String, WidgetBuilder>{
-        '/transactionDetails': (_) => new TransactionDetailsWidget(),
-        // '/forgotPassword': (_) => new ForgotPwd(),
-      },
     );
   }
 }
@@ -127,7 +119,13 @@ class AccountPageState extends State<AccountPage> {
   Future _scan() async {
     print('Scanning');
     String data = await scanner.scan(); // Read the QR encoded string
+    print('Scanned');
     print(data);
-    Navigator.of(context).pushNamed('/transactionDetails', arguments: {'data':data});
+    if (data.indexOf('QRPayment:') == -1){
+      throw Exception('QR Code is not recognized');
+    }
+    var id = data.substring(10);
+    print(id);
+    Navigator.of(context).pushNamed('/transactionDetails', arguments: {'data': id});
   }
 }
