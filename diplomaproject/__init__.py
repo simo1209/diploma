@@ -35,4 +35,7 @@ def load_user(account_id):
 
 
 from diplomaproject.user.views import user_blueprint
+from diplomaproject.transactions.views import transaction_blueprint
+
 app.register_blueprint(user_blueprint)
+app.register_blueprint(transaction_blueprint)
