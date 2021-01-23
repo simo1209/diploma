@@ -18,6 +18,7 @@ class BaseConfig(object):
     BCRYPT_LOG_ROUNDS = 10
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
+    QR_CODES = '/home/simo09/qr-codes'
 
 
 class DevelopmentConfig(BaseConfig):

@@ -1,9 +1,9 @@
-from flask import render_template, Blueprint, request, jsonify
+from flask import render_template, url_for, redirect, Blueprint, request, jsonify, send_from_directory
 from flask_login import current_user, login_required
 from cryptography.fernet import Fernet
-import qrcode
+from qrcode import make as qrc
 
-from diplomaproject import db
+from diplomaproject import app, db
 from diplomaproject.models import Transaction
 from diplomaproject.models import Account
 from diplomaproject.transactions.forms import TransactionForm
@@ -33,11 +33,17 @@ def create_transaction():
         db.session.commit()
 
         ba = bytearray('QRPayment:'.encode()) # Distinct QR codes
-        secret_id = fernet.encrypt(bytes([transaction.id]))
+        secret_id = fernet.encrypt((transaction.id).to_bytes((transaction.id).bit_length()//8 + 1, 'big'))
         ba.extend(secret_id)
 
-        img = qrcode.make(ba.decode())
-        img.save('qr-codes/{}.png'.format(transaction.id))
+        img = qrc(ba)
+        img.save('{}/{}.png'.format(app.config['QR_CODES'],transaction.id))
 
-        return "Transactions Created", 201
+        return redirect(url_for('transaction.qrcode', id=secret_id))
     return render_template('create_transaction.html', form=form)
+
+@transaction_blueprint.route('/qrcode/<id>')
+def qrcode(id):
+    image = int.from_bytes(fernet.decrypt(id.encode()), 'big')
+    print(image)
+    return send_from_directory(app.config['QR_CODES'], '{}.png'.format(image))
