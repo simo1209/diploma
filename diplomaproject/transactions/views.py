@@ -32,18 +32,35 @@ def create_transaction():
         db.session.add(transaction)
         db.session.commit()
 
-        ba = bytearray('QRPayment:'.encode()) # Distinct QR codes
-        secret_id = fernet.encrypt((transaction.id).to_bytes((transaction.id).bit_length()//8 + 1, 'big'))
+        ba = bytearray('QRPayment:'.encode())  # Distinct QR codes
+        secret_id = fernet.encrypt((transaction.id).to_bytes(
+            (transaction.id).bit_length()//8 + 1, 'big'))
         ba.extend(secret_id)
 
-        img = qrc(ba)
-        img.save('{}/{}.png'.format(app.config['QR_CODES'],transaction.id))
+        print(ba.decode())
+        img = qrc(ba.decode())
+        img.save('{}/{}.png'.format(app.config['QR_CODES'], transaction.id))
 
         return redirect(url_for('transaction.qrcode', id=secret_id))
     return render_template('create_transaction.html', form=form)
 
+
 @transaction_blueprint.route('/qrcode/<id>')
 def qrcode(id):
     image = int.from_bytes(fernet.decrypt(id.encode()), 'big')
-    print(image)
     return send_from_directory(app.config['QR_CODES'], '{}.png'.format(image))
+
+
+@transaction_blueprint.route('/<id>')
+def transaction_details(id):
+    
+    transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
+
+    return jsonify(
+        Transaction.query
+        .filter_by(id=transaction_id)
+        .with_entities(
+            Transaction.amount,
+            Transaction.description
+        ).first()._asdict()
+    )
