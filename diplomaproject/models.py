@@ -1,4 +1,5 @@
 import datetime
+import enum
 
 from diplomaproject import app, db, bcrypt
 
@@ -67,6 +68,38 @@ class Account(db.Model):
 
     def __repr__(self):
         return '<Account {0}>'.format(self.email)
+
+
+class TransactionStatus(enum.Enum):
+    created = 1
+    completed = 2
+    expired = 3
+
+
+class Transaction(db.Model):
+
+    __tablename__ = 'transactions'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    seller_id = db.Column(db.Integer, db.ForeignKey(
+        'accounts.id'), nullable=False)
+    seller = db.relationship(
+        'Account', foreign_keys=[seller_id])
+    buyer_id = db.Column(db.Integer, db.ForeignKey(
+        'accounts.id'), nullable=True)
+    buyer = db.relationship(
+        'Account', foreign_keys=[buyer_id])
+    amount = db.Column(db.Numeric, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    status = db.Column(db.Enum(TransactionStatus),
+                       nullable=False, server_default='created')
+    creation_time = db.Column(
+        db.DateTime, nullable=False, server_default=db.text('NOW()'))
+
+    def __init__(self, seller, amount, description):
+        self.seller = seller
+        self.amount = amount
+        self. description = description
 
 
 db.create_all()
