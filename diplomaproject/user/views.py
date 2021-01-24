@@ -36,7 +36,11 @@ def register():
 
         db.session.add(address)
         db.session.add(account)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return 'Email taken', 400
 
         login_user(account)
 
