@@ -57,14 +57,20 @@ def login():
             return render_template('login.html', form=form), 401
     return render_template('login.html', title='Please Login', form=form)
 
+@user_blueprint.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return 'Logged Out', 200
 
 @user_blueprint.route('/account', methods=['GET'])
 @login_required
 def get_account():
     return jsonify(
-        current_user.query.with_entities(
-            Account.first_name, 
-            Account.last_name, 
-            Account.email, 
-            Account.balance).first()._asdict()
-        )
+        Account.query.filter_by(id=current_user.id).with_entities(
+            Account.first_name,
+            Account.last_name,
+            Account.email,
+            Account.balance
+        ).first()._asdict()
+    )
