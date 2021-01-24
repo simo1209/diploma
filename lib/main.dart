@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:diploma_project/transaction-details.dart';
 import 'package:diploma_project/transaction-create.dart';
 
-
 void main() {
   runApp(Login());
 }
@@ -131,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         Session.updateCookie(response);
         Navigator.of(context).pushNamed('/account');
-      }
+      } else if (response.statusCode == 401) {}
     }
   }
 }
@@ -142,8 +141,8 @@ class SignUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: SignUpPage(),
+      appBar: AppBar(title: const Text(_title)),
+      body: SignUpPage(),
     );
   }
 }
@@ -156,6 +155,8 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  String errorMessage = '';
+
   final _formKey = GlobalKey<FormState>();
 
   final emailController = TextEditingController();
@@ -345,6 +346,10 @@ class _SignUpPageState extends State<SignUpPage> {
                       textColor: Colors.white,
                     ),
                   ),
+                  Visibility(
+                    visible: errorMessage != null,
+                    child: Text(errorMessage),
+                  ),
                 ],
               ),
             ],
@@ -374,9 +379,13 @@ class _SignUpPageState extends State<SignUpPage> {
       var response = await Session.register(fields);
 
       if (response.statusCode == 201) {
+        Session.updateCookie(response);
         Navigator.of(context).pushNamed('/account');
       } else {
-        throw Exception('Failed to register. ');
+        String em = await response.stream.bytesToString();
+        setState(() {
+          errorMessage = em;
+        });
       }
     }
   }

@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 
 class Session {
   static Map<String, String> headers = {};
-  static final String host = "http://192.168.0.101:5001";
+  static final String host = "http://207.154.253.242:5000";
 
   static Future<http.StreamedResponse> login(email, password) async {
     var uri = Uri.parse('$host/login');

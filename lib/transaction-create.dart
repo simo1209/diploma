@@ -57,6 +57,9 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                   if (value.isEmpty) {
                     return 'Please enter some text';
                   }
+                  if (double.parse(value) <= 0){
+                    return 'Please enter valid amount';
+                  }
                   return null;
                 },
               ),
@@ -112,7 +115,9 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                 builder: (context) => TransactionCode(
                       imgUrl: codeUrl,
                     )));
-      } else {}
+      } else if(response.statusCode == 400) {
+
+      }
     }
   }
 }

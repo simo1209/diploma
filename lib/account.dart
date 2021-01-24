@@ -78,10 +78,24 @@ class AccountPageState extends State<AccountPage> {
                 Navigator.of(context).pushNamed('/transactionCreate');
               },
             ),
+            RaisedButton(
+              child: Text('Log Out', style: TextStyle(fontSize: 24)),
+              onPressed: () => _logout(context),
+            ),
           ],
         )
       ],
     );
+  }
+
+  Future _logout(context) async {
+
+    var response = await Session.get('/logout');
+
+    if (response.statusCode == 200){
+      Session.headers.remove('cookie');
+      Navigator.popUntil(context, ModalRoute.withName('/'));
+    }
   }
 
   Future getAccountInformation() async {
