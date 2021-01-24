@@ -1,10 +1,11 @@
 from flask import render_template, url_for, redirect, Blueprint, request, jsonify, send_from_directory
 from flask_login import current_user, login_required
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from qrcode import make as qrc
 
 from diplomaproject import app, db
 from diplomaproject.models import Transaction
+from diplomaproject.models import TransactionStatus
 from diplomaproject.models import Account
 from diplomaproject.transactions.forms import TransactionForm
 
@@ -47,14 +48,20 @@ def create_transaction():
 
 @transaction_blueprint.route('/qrcode/<id>')
 def qrcode(id):
-    image = int.from_bytes(fernet.decrypt(id.encode()), 'big')
+    try:
+        image = int.from_bytes(fernet.decrypt(id.encode()), 'big')
+    except InvalidToken:
+        return 'Supply valid id', 400
     return send_from_directory(app.config['QR_CODES'], '{}.png'.format(image))
 
 
 @transaction_blueprint.route('/<id>')
 def transaction_details(id):
     
-    transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
+    try:
+        transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
+    except InvalidToken:
+        return 'Supply valid id', 400
 
     return jsonify(
         Transaction.query
@@ -64,3 +71,27 @@ def transaction_details(id):
             Transaction.description
         ).first()._asdict()
     )
+
+@transaction_blueprint.route('/accept', methods=['POST'])
+@login_required
+def accept():
+    payload = request.get_json()
+    if not payload:
+        return 'Invalid payload', 400
+    id = payload['id']
+    if not id:
+        return 'Supply Id', 400
+    
+    try:
+        transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
+    except InvalidToken:
+        return 'Supply valid id', 400
+
+    transaction = Transaction.query.filter_by(id=transaction_id).first()
+    
+    if transaction.status == TransactionStatus.created:
+        transaction.buyer = current_user
+        db.session.commit()
+        return 'Transaction Complete', 200
+    else:
+        return 'Transaction Invalid', 400
