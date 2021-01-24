@@ -20,8 +20,11 @@ transaction_blueprint = Blueprint(
 @transaction_blueprint.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_transaction():
-    form = TransactionForm(request.form)
 
+    if request.method == 'GET':
+        return render_template('create_transaction.html', form=form)
+
+    form = TransactionForm(request.form)
     if form.validate_on_submit():
 
         transaction = Transaction(
@@ -43,7 +46,8 @@ def create_transaction():
         img.save('{}/{}.png'.format(app.config['QR_CODES'], transaction.id))
 
         return redirect(url_for('transaction.qrcode', id=secret_id))
-    return render_template('create_transaction.html', form=form)
+    else:
+        return 'Invalid form data', 400
 
 
 @transaction_blueprint.route('/qrcode/<id>')
