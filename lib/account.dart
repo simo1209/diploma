@@ -56,7 +56,7 @@ class AccountPageState extends State<AccountPage> {
           future: getAccountInformation(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              return createAccountWidget(context, snapshot.data);
+              return accountDetailsWidget(context, snapshot.data);
             } else if (snapshot.hasError) {
               return Text(snapshot.error.toString());
             } else {
@@ -74,7 +74,9 @@ class AccountPageState extends State<AccountPage> {
             ),
             RaisedButton(
               child: Text('Create Code', style: TextStyle(fontSize: 24)),
-              onPressed: () => {},
+              onPressed: (){
+                Navigator.of(context).pushNamed('/transactionCreate');
+              },
             ),
           ],
         )
@@ -87,7 +89,7 @@ class AccountPageState extends State<AccountPage> {
     return response;
   }
 
-  Widget createAccountWidget(BuildContext context, Response data) {
+  Widget accountDetailsWidget(BuildContext context, Response data) {
     if (data.statusCode == 200) {
       Account account = Account.fromJson(jsonDecode(data.body));
       return Column(

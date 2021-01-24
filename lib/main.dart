@@ -2,6 +2,7 @@ import 'package:diploma_project/account.dart';
 import 'package:diploma_project/session.dart';
 import 'package:flutter/material.dart';
 import 'package:diploma_project/transaction-details.dart';
+import 'package:diploma_project/transaction-create.dart';
 
 
 void main() {
@@ -23,8 +24,7 @@ class Login extends StatelessWidget {
         '/account': (_) => new AccountWidget(),
         '/signUp': (_) => new SignUp(),
         '/transactionDetails': (_) => new TransactionDetailsWidget(),
-
-        // '/forgotPassword': (_) => new ForgotPwd(),
+        '/transactionCreate': (_) => new TransactionCreatePage(),
       },
     );
   }
@@ -143,7 +143,7 @@ class SignUp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(title: const Text(_title)),
-        body: SignUp(),
+        body: SignUpPage(),
     );
   }
 }

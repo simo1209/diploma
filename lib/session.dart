@@ -25,6 +25,19 @@ class Session {
     return request.send();
   }
 
+  static Future<http.StreamedResponse> postForm(String url, Map<String, String> fields) {
+    var uri = Uri.parse('$host$url');
+    print(uri);
+
+    var request = http.MultipartRequest('POST', uri);
+    fields.forEach((key, value) {
+      request.fields[key] = value;
+    });
+    request.headers['cookie'] = headers['cookie'];
+
+    return request.send();
+  }
+
   static Future<http.Response> get(String url) async {
     print(headers);
     http.Response response = await http.get('$host$url', headers: headers);

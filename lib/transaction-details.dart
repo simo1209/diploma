@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:diploma_project/session.dart';
 
-
 class Transaction {
   final String transactionDesc;
   final double amount;
@@ -26,30 +25,22 @@ class Transaction {
 class TransactionDetailsWidget extends StatelessWidget {
   static const String _title = 'Transaction Details';
 
-
   @override
   Widget build(BuildContext context) {
-    Map arguments = ModalRoute
-        .of(context)
-        .settings
-        .arguments as Map;
+    Map arguments = ModalRoute.of(context).settings.arguments as Map;
 
     if (arguments == null) {
       throw new Exception('Arguments not passed');
     }
 
-    return MaterialApp(
-      title: _title,
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: const Text(_title)),
         body: TransactionDetailsPage(arguments: arguments),
-      ),
     );
   }
 }
 
 class TransactionDetailsPage extends StatefulWidget {
-
   final Map arguments;
 
   @override
@@ -92,19 +83,14 @@ class TransactionDetailsPageState extends State<TransactionDetailsPage> {
       return Container(
         child: Column(
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Text('Description'),
-                Text('Amount')
-              ],
+            ListTile(
+              title: Text('Amount: ${transaction.amount}'),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Text(transaction.transactionDesc),
-                Text(transaction.amount.toString())
-              ],
+            Divider(
+              height: 2.0,
+            ),
+            ListTile(
+              title: Text('Description: ${transaction.transactionDesc}'),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -113,9 +99,7 @@ class TransactionDetailsPageState extends State<TransactionDetailsPage> {
                   child: Text("Accept"),
                   color: Colors.lightBlue,
                   textColor: Colors.white,
-                  onPressed: () {
-                    print('Accepting transaction');
-                  },
+                  onPressed: _accept,
                 )
               ],
             )
@@ -126,4 +110,14 @@ class TransactionDetailsPageState extends State<TransactionDetailsPage> {
     return Text(response.body);
   }
 
+  Future _accept() async {
+    Session.headers["Content-Type"] = "application/json";
+    print(Session.headers);
+    var response = await Session.post("/transactions/accept",
+        jsonEncode(<String, String>{'id': arguments['data']}));
+    if (response.statusCode == 200) {
+      Session.headers.remove('Content-Type');
+      Navigator.popUntil(context, ModalRoute.withName('/account'));
+    }
+  }
 }
