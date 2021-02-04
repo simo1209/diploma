@@ -2,6 +2,8 @@ from flask import render_template, url_for, redirect, Blueprint, request, jsonif
 from flask_login import current_user, login_required
 from cryptography.fernet import Fernet, InvalidToken
 from qrcode import make as qrc
+from sqlalchemy import exc
+
 
 from diplomaproject import app, db
 from diplomaproject.models import Transaction
@@ -21,10 +23,11 @@ transaction_blueprint = Blueprint(
 @login_required
 def create_transaction():
 
+    form = TransactionForm(request.form)
+
     if request.method == 'GET':
         return render_template('create_transaction.html', form=form)
 
-    form = TransactionForm(request.form)
     if form.validate_on_submit():
 
         transaction = Transaction(
@@ -34,7 +37,11 @@ def create_transaction():
         )
 
         db.session.add(transaction)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except exc.IntegrityError:
+            db.session.rollback()
+            return 'Invalid Transaction Amount', 400
 
         ba = bytearray('QRPayment:'.encode())  # Distinct QR codes
         secret_id = fernet.encrypt((transaction.id).to_bytes(
@@ -95,7 +102,11 @@ def accept():
     
     if transaction.status == TransactionStatus.created:
         transaction.buyer = current_user
-        db.session.commit()
+        try:
+            db.session.commit()
+        except exc.IntegrityError:
+            db.session.rollback()
+            return 'Insuficient Balance', 400
         return 'Transaction Complete', 200
     else:
         return 'Transaction Invalid', 400
