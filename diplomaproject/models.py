@@ -41,7 +41,7 @@ class Account(db.Model):
                               backref=db.backref('accounts', lazy=True))
 
     UCN = db.Column(db.String(10), nullable=False)
-    balance = db.Column(db.Numeric, nullable=False, server_default='0.0')
+    balance = db.Column(db.Numeric, db.CheckConstraint('balance>=0'), nullable=False, server_default='0.0')
 
     def __init__(self, first_name, last_name,  email, password, phone, address, UCN):
         self.first_name = first_name
@@ -89,7 +89,7 @@ class Transaction(db.Model):
         'accounts.id'), nullable=True)
     buyer = db.relationship(
         'Account', foreign_keys=[buyer_id])
-    amount = db.Column(db.Numeric, nullable=False)
+    amount = db.Column(db.Numeric, db.CheckConstraint('amount>0'), nullable=False)
     description = db.Column(db.Text, nullable=False)
     status = db.Column(db.Enum(TransactionStatus),
                        nullable=False, server_default='created')
@@ -101,5 +101,35 @@ class Transaction(db.Model):
         self.amount = amount
         self. description = description
 
+
+transfer_func = db.DDL(
+    "CREATE OR REPLACE FUNCTION transfer_money() "
+    "RETURNS TRIGGER AS $$ "
+    "BEGIN "
+    "IF NEW.buyer_id IS NOT NULL THEN "
+    "UPDATE accounts SET balance = balance - NEW.amount WHERE accounts.id = NEW.buyer_id; "
+    "UPDATE accounts SET balance = balance + NEW.amount WHERE accounts.id = NEW.seller_id; "
+    "NEW.status = 'completed'; "
+    "END IF; "
+    "RETURN NEW; "
+    "END; $$ LANGUAGE PLPGSQL"
+)
+
+transfer_trig = db.DDL(
+    "CREATE TRIGGER transfer_money_trigger BEFORE UPDATE ON transactions "
+    "FOR EACH ROW EXECUTE PROCEDURE transfer_money();"
+)
+
+db.event.listen(
+    Transaction.__table__,
+    'after_create',
+    transfer_func.execute_if(dialect='postgresql')
+)
+
+db.event.listen(
+    Transaction.__table__,
+    'after_create',
+    transfer_trig.execute_if(dialect='postgresql')
+)
 
 db.create_all()
