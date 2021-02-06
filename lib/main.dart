@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:diploma_project/account.dart';
 import 'package:diploma_project/session.dart';
-import 'package:flutter/material.dart';
-import 'package:diploma_project/transaction-details.dart';
 import 'package:diploma_project/transaction-create.dart';
+import 'package:diploma_project/transaction-details.dart';
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(Login());
@@ -125,12 +127,26 @@ class _LoginPageState extends State<LoginPage> {
       String email = emailController.text;
       String password = passwordController.text;
 
-      var response = await Session.login(email, password);
+      try {
+        var response = await Session.login(email, password);
 
-      if (response.statusCode == 200) {
-        Session.updateCookie(response);
-        Navigator.of(context).pushNamed('/account');
-      } else if (response.statusCode == 401) {}
+        if (response.statusCode == 200) {
+          Session.updateCookie(response);
+          Navigator.of(context).pushReplacementNamed('/account');
+        } else {
+          print('Error occurred');
+          String em = await response.stream.bytesToString();
+          Map<String, dynamic> error = jsonDecode(em);
+          print(error);
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(error['description']),
+          ));
+        }
+      } on Exception catch (_) {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text("Couldn't connect to server"),
+        ));
+      }
     }
   }
 }
@@ -155,8 +171,6 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  String errorMessage = '';
-
   final _formKey = GlobalKey<FormState>();
 
   final emailController = TextEditingController();
@@ -221,6 +235,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   if (value.isEmpty) {
                     return 'Please enter some text';
                   }
+
+                  if (value.length < 6 || value.length > 40) {
+                    return 'Invalid length';
+                  }
+
                   return null;
                 },
               ),
@@ -234,6 +253,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   if (value.isEmpty) {
                     return 'Please enter some text';
                   }
+
+                  if (value.length < 6 || value.length > 40) {
+                    return 'Invalid length';
+                  }
+
                   return null;
                 },
               ),
@@ -250,6 +274,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   if (value.compareTo(passwordController.text) != 0) {
                     return 'Passwords must match';
                   }
+
+                  if (value.length < 6 || value.length > 40) {
+                    return 'Invalid length';
+                  }
+
                   return null;
                 },
               ),
@@ -262,6 +291,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   if (value.isEmpty) {
                     return 'Please enter some text';
                   }
+
+                  RegExp regExp = new RegExp(r'08[789]\d{7}');
+                  if (!regExp.hasMatch(value) && value.length != 10) {
+                    return 'Please enter valid phone number';
+                  }
+
                   return null;
                 },
               ),
@@ -273,6 +308,10 @@ class _SignUpPageState extends State<SignUpPage> {
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter some text';
+                  }
+                  RegExp regExp = new RegExp(r'\d{10}');
+                  if (!regExp.hasMatch(value) && value.length != 10) {
+                    return 'Please enter valid UCN';
                   }
                   return null;
                 },
@@ -346,10 +385,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       textColor: Colors.white,
                     ),
                   ),
-                  Visibility(
-                    visible: errorMessage != null,
-                    child: Text(errorMessage),
-                  ),
                 ],
               ),
             ],
@@ -375,17 +410,24 @@ class _SignUpPageState extends State<SignUpPage> {
         'address2': address2Controller.text,
         'postal_code': postalCodeController.text,
       };
+      try {
+        var response = await Session.register(fields);
 
-      var response = await Session.register(fields);
-
-      if (response.statusCode == 201) {
-        Session.updateCookie(response);
-        Navigator.of(context).pushNamed('/account');
-      } else {
-        String em = await response.stream.bytesToString();
-        setState(() {
-          errorMessage = em;
-        });
+        if (response.statusCode == 201) {
+          Session.updateCookie(response);
+          Navigator.of(context).pushReplacementNamed('/account');
+        } else {
+          print('Error occurred');
+          String em = await response.stream.bytesToString();
+          Map<String, dynamic> error = jsonDecode(em);
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(error['description']),
+          ));
+        }
+      } on Exception catch (_) {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text("Couldn't connect to server"),
+        ));
       }
     }
   }

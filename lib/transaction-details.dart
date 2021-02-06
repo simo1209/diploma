@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
 
 import 'package:diploma_project/session.dart';
+import 'package:flutter/material.dart';
 
 class Transaction {
   final String transactionDesc;
@@ -99,7 +99,7 @@ class TransactionDetailsPageState extends State<TransactionDetailsPage> {
                   child: Text("Accept"),
                   color: Colors.lightBlue,
                   textColor: Colors.white,
-                  onPressed: _accept,
+                  onPressed: () => {_accept(context)},
                 )
               ],
             )
@@ -110,14 +110,21 @@ class TransactionDetailsPageState extends State<TransactionDetailsPage> {
     return Text(response.body);
   }
 
-  Future _accept() async {
+  Future _accept(context) async {
     Session.headers["Content-Type"] = "application/json";
     print(Session.headers);
     var response = await Session.post("/transactions/accept",
         jsonEncode(<String, String>{'id': arguments['data']}));
     if (response.statusCode == 200) {
       Session.headers.remove('Content-Type');
-      Navigator.popUntil(context, ModalRoute.withName('/account'));
+      Navigator.pushReplacementNamed(context, '/account');
+    } else {
+      print('Error occurred');
+      String em = response.body;
+      print(em);
+      Scaffold.of(context).showSnackBar(SnackBar(
+        content: Text(em),
+      ));
     }
   }
 }

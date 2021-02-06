@@ -1,11 +1,10 @@
 import 'dart:convert';
 
 import 'package:diploma_project/session.dart';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
-
 
 class Account {
   final String firstName;
@@ -35,9 +34,9 @@ class AccountWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      return Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: AccountPage(),
+    return Scaffold(
+      appBar: AppBar(title: const Text(_title)),
+      body: AccountPage(),
     );
   }
 }
@@ -50,6 +49,9 @@ class AccountPage extends StatefulWidget {
 class AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
+    bool isScreenWide =
+        MediaQuery.of(context).size.width >= MediaQuery.of(context).size.height;
+
     return Column(
       children: [
         FutureBuilder(
@@ -64,7 +66,8 @@ class AccountPageState extends State<AccountPage> {
             }
           },
         ),
-        Column(
+        Flex(
+          direction: isScreenWide ? Axis.horizontal : Axis.vertical,
           children: [
             RaisedButton(
               child: Text('Scan Code', style: TextStyle(fontSize: 24)),
@@ -74,7 +77,7 @@ class AccountPageState extends State<AccountPage> {
             ),
             RaisedButton(
               child: Text('Create Code', style: TextStyle(fontSize: 24)),
-              onPressed: (){
+              onPressed: () {
                 Navigator.of(context).pushNamed('/transactionCreate');
               },
             ),
@@ -89,18 +92,29 @@ class AccountPageState extends State<AccountPage> {
   }
 
   Future _logout(context) async {
+    try {
+      var response = await Session.get('/logout');
 
-    var response = await Session.get('/logout');
-
-    if (response.statusCode == 200){
-      Session.headers.remove('cookie');
-      Navigator.popUntil(context, ModalRoute.withName('/'));
+      if (response.statusCode == 302 || response.statusCode == 200) {
+        Session.headers.remove('cookie');
+        Navigator.pushReplacementNamed(context, '/');
+      }
+    } on Exception catch (_) {
+      Scaffold.of(context).showSnackBar(SnackBar(
+        content: Text("Couldn't connect to server"),
+      ));
     }
   }
 
   Future getAccountInformation() async {
-    var response = await Session.get("/account");
-    return response;
+    try {
+      var response = await Session.get("/account");
+      return response;
+    } on Exception catch (_) {
+      Scaffold.of(context).showSnackBar(SnackBar(
+        content: Text("Couldn't connect to server"),
+      ));
+    }
   }
 
   Widget accountDetailsWidget(BuildContext context, Response data) {
@@ -133,15 +147,30 @@ class AccountPageState extends State<AccountPage> {
   }
 
   Future _scan() async {
-    print('Scanning');
-    String data = await scanner.scan(); // Read the QR encoded string
-    print('Scanned');
-    print(data);
-    if (data.indexOf('QRPayment:') == -1){
-      throw Exception('QR Code is not recognized');
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+      Permission.storage,
+    ].request();
+
+    if (statuses[Permission.camera].isGranted &&
+        statuses[Permission.storage].isGranted) {
+      print('Scanning');
+      String data = await scanner.scan(); // Read the QR encoded string
+      print('Scanned');
+      print(data);
+      if (data.indexOf('QRPayment:') == -1) {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text("QR Code is not recognized"),
+        ));
+      }
+      var id = data.substring(10);
+      print(id);
+      Navigator.of(context)
+          .pushNamed('/transactionDetails', arguments: {'data': id});
+    } else {
+      Scaffold.of(context).showSnackBar(SnackBar(
+        content: Text("Please grant permission"),
+      ));
     }
-    var id = data.substring(10);
-    print(id);
-    Navigator.of(context).pushNamed('/transactionDetails', arguments: {'data': id});
   }
 }

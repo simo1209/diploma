@@ -18,6 +18,7 @@ class TransactionCreatePage extends StatefulWidget {
 class TransactionCreatePageState extends State<TransactionCreatePage> {
   final _formKey = GlobalKey<FormState>();
   static const String _title = 'Create Transaction';
+  String errorMessage = '';
 
   final amountController = TextEditingController();
   final descriptionController = TextEditingController();
@@ -87,6 +88,10 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                         color: Colors.lightBlue,
                         textColor: Colors.white,
                       )),
+                  Visibility(
+                    visible: errorMessage.isEmpty,
+                    child: Text(errorMessage),
+                  ),
                 ],
               ),
             ],
@@ -116,7 +121,10 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                       imgUrl: codeUrl,
                     )));
       } else if(response.statusCode == 400) {
-
+        String em = await response.stream.bytesToString();
+        setState(() {
+          errorMessage = em;
+        });
       }
     }
   }
@@ -140,7 +148,7 @@ class TransactionCode extends StatelessWidget {
                 color: Colors.white,
               ),
               onPressed: () {
-                Navigator.popUntil(context, ModalRoute.withName('/account'));
+                Navigator.pushReplacementNamed(context, '/account');
               },
             )
           ],
