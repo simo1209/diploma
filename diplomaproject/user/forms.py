@@ -33,11 +33,11 @@ class RegisterForm(FlaskForm):
     )
     phone = StringField(
         'Phone Number',
-        validators=[DataRequired(), Regexp(r'\d{10}')]
+        validators=[DataRequired(), Regexp(r'\d{10}'), Length(min=10,max=10)]
     )
     UCN = StringField(
         'Unique citizenship number',
-        validators=[DataRequired(), Regexp(r'\d{10}')]
+        validators=[DataRequired(), Regexp(r'\d{10}'), Length(min=10,max=10)]
     )
     country = StringField(
         'Country',

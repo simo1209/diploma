@@ -1,4 +1,4 @@
-from flask import render_template, Blueprint, request, jsonify
+from flask import render_template, Blueprint, request, jsonify, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import exc
 
@@ -6,6 +6,7 @@ from diplomaproject import bcrypt, db
 from diplomaproject.models import Account
 from diplomaproject.models import Address
 from diplomaproject.user.forms import LoginForm, RegisterForm
+from werkzeug.exceptions import Conflict, BadRequest, Unauthorized
 
 
 user_blueprint = Blueprint('user', __name__)
@@ -44,15 +45,15 @@ def register():
             db.session.commit()
         except exc.IntegrityError:
             db.session.rollback()
-            return 'Email taken', 400
+            raise Conflict('Email already taken')
 
         login_user(account)
 
-        return "Successfully Registered", 201
+        return render_template('menu.html', account=account), 201
     else:
-        return 'Invalid form data', 400
+        raise BadRequest('Invalid form data')
 
-
+@user_blueprint.route('/', methods=['GET', 'POST'])
 @user_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm(request.form)
@@ -65,15 +66,15 @@ def login():
         if account and bcrypt.check_password_hash(
                 account.password, request.form['password']):
             login_user(account)
-            return "Authenticated", 200
+            return render_template('menu.html', account=account), 200
         else:
-            return "Wrong username or password", 401
+            return Unauthorized('Wrong username or password')
 
 @user_blueprint.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return 'Logged Out', 200
+    return redirect(url_for('user.login'))
 
 @user_blueprint.route('/account', methods=['GET'])
 @login_required

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+
+<header class="content-header">
+    <h1>Hello {{account.first_name}} {{account.last_name}}</h1>
+</header>
+
+<a href="/transactions/create"><button class="btn btn-primary">Create Transaction</button></a>
+
+
+{% endblock content %}

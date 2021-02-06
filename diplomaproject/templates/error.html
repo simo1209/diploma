@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-12">
+            <h1>
+                Error occured!</h1>
+            <h2>
+                {{e.code}}} {{e.message}}</h2>
+            <div>
+                {{e.description}}
+            </div>
+            <div>
+                <a class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-home"></span>Home</a>
+            </div>
+    </div>
+</div>
+
+{% endblock content %}

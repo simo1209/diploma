@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 from cryptography.fernet import Fernet, InvalidToken
 from qrcode import make as qrc
 from sqlalchemy import exc
-
+from werkzeug.exceptions import BadRequest
 
 from diplomaproject import app, db
 from diplomaproject.models import Transaction
@@ -41,7 +41,7 @@ def create_transaction():
             db.session.commit()
         except exc.IntegrityError:
             db.session.rollback()
-            return 'Invalid Transaction Amount', 400
+            raise BadRequest('Invalid Transaction Amount')
 
         ba = bytearray('QRPayment:'.encode())  # Distinct QR codes
         secret_id = fernet.encrypt((transaction.id).to_bytes(
@@ -54,7 +54,7 @@ def create_transaction():
 
         return redirect(url_for('transaction.qrcode', id=secret_id))
     else:
-        return 'Invalid form data', 400
+        raise BadRequest('Invalid form data')
 
 
 @transaction_blueprint.route('/qrcode/<id>')
@@ -62,7 +62,7 @@ def qrcode(id):
     try:
         image = int.from_bytes(fernet.decrypt(id.encode()), 'big')
     except InvalidToken:
-        return 'Supply valid id', 400
+        raise BadRequest('Supply valid id')
     return send_from_directory(app.config['QR_CODES'], '{}.png'.format(image))
 
 
@@ -72,7 +72,7 @@ def transaction_details(id):
     try:
         transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
     except InvalidToken:
-        return 'Supply valid id', 400
+        raise BadRequest('Supply valid id')
 
     return jsonify(
         Transaction.query
@@ -88,15 +88,15 @@ def transaction_details(id):
 def accept():
     payload = request.get_json()
     if not payload:
-        return 'Invalid payload', 400
+        raise BadRequest('Invalid Payload')
     id = payload['id']
     if not id:
-        return 'Supply Id', 400
+        raise BadRequest('Supply valid id')
     
     try:
         transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
     except InvalidToken:
-        return 'Supply valid id', 400
+        raise BadRequest('Supply valid id')
 
     transaction = Transaction.query.filter_by(id=transaction_id).first()
     
@@ -106,7 +106,7 @@ def accept():
             db.session.commit()
         except exc.IntegrityError:
             db.session.rollback()
-            return 'Insuficient Balance', 400
+            raise BadRequest('Transaction Error. Check your balance.')
         return 'Transaction Complete', 200
     else:
-        return 'Transaction Invalid', 400
+        raise BadRequest('Transaction Invalid')

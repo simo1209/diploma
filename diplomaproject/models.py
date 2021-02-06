@@ -85,7 +85,7 @@ class Transaction(db.Model):
         'accounts.id'), nullable=False)
     seller = db.relationship(
         'Account', foreign_keys=[seller_id])
-    buyer_id = db.Column(db.Integer, db.ForeignKey(
+    buyer_id = db.Column(db.Integer,  db.CheckConstraint('buyer_id!=seller_id'), db.ForeignKey(
         'accounts.id'), nullable=True)
     buyer = db.relationship(
         'Account', foreign_keys=[buyer_id])
