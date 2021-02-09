@@ -77,7 +77,7 @@ def login():
         if account and bcrypt.check_password_hash(
                 account.password, request.form['password']):
             login_user(account)
-            return render_template('menu.html', account=account), 200
+            return render_template(url_for('account.account_view')), 200
     return Unauthorized('Wrong username or password')
 
 @account_blueprint.route('/logout')
@@ -97,3 +97,12 @@ def get_account():
             Account.balance
         ).first()._asdict()
     )
+
+@account_blueprint.route('/accounts/account/transactions', methods=['GET'])
+@login_required
+def account_transactions():
+    result = []
+    transactions = db.engine.execute('select * from transaction_history({})'.format(current_user.id))
+    for transaction in transactions:
+        result.append(dict(transaction.items()))
+    return jsonify(result)
