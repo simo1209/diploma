@@ -47,6 +47,10 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                 "Create Transaction",
                 style: TextStyle(fontSize: 33),
               ),
+              Text(
+                "Enter amount and description for the transaction. The app will generate a QR code you can share with others, to request the amount entered.",
+                style: TextStyle(fontSize: 18, color: Colors.white12),
+              ),
               TextFormField(
                 controller: amountController,
                 keyboardType: TextInputType.numberWithOptions(
@@ -56,9 +60,9 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
-                  if (double.parse(value) <= 0){
+                  if (double.parse(value) <= 0) {
                     return 'Please enter valid amount';
                   }
                   return null;
@@ -72,7 +76,7 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   return null;
                 },
@@ -120,7 +124,7 @@ class TransactionCreatePageState extends State<TransactionCreatePage> {
                 builder: (context) => TransactionCode(
                       imgUrl: codeUrl,
                     )));
-      } else if(response.statusCode == 400) {
+      } else if (response.statusCode == 400) {
         String em = await response.stream.bytesToString();
         setState(() {
           errorMessage = em;

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:diploma_project/account.dart';
+import 'package:diploma_project/history.dart';
 import 'package:diploma_project/session.dart';
 import 'package:diploma_project/transaction-create.dart';
 import 'package:diploma_project/transaction-details.dart';
@@ -26,6 +27,7 @@ class Login extends StatelessWidget {
         '/signUp': (_) => new SignUp(),
         '/transactionDetails': (_) => new TransactionDetailsWidget(),
         '/transactionCreate': (_) => new TransactionCreatePage(),
+        '/history': (_) => new TransactionHistory()
       },
     );
   }
@@ -74,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               validator: (value) {
                 if (value.isEmpty) {
-                  return 'Please enter some text';
+                  return 'Please fill in the field';
                 }
                 return null;
               },
@@ -87,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               validator: (value) {
                 if (value.isEmpty) {
-                  return 'Please enter some text';
+                  return 'Please fill in the field';
                 }
                 return null;
               },
@@ -130,6 +132,7 @@ class _LoginPageState extends State<LoginPage> {
       try {
         var response = await Session.login(email, password);
 
+        print(response);
         if (response.statusCode == 200) {
           Session.updateCookie(response);
           Navigator.of(context).pushReplacementNamed('/account');
@@ -208,7 +211,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   return null;
                 },
@@ -220,7 +223,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   return null;
                 },
@@ -233,7 +236,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
 
                   if (value.length < 6 || value.length > 40) {
@@ -251,7 +254,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
 
                   if (value.length < 6 || value.length > 40) {
@@ -269,7 +272,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   if (value.compareTo(passwordController.text) != 0) {
                     return 'Passwords must match';
@@ -289,7 +292,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
 
                   RegExp regExp = new RegExp(r'08[789]\d{7}');
@@ -307,7 +310,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   RegExp regExp = new RegExp(r'\d{10}');
                   if (!regExp.hasMatch(value) && value.length != 10) {
@@ -323,7 +326,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   return null;
                 },
@@ -335,7 +338,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   return null;
                 },
@@ -347,7 +350,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   return null;
                 },
@@ -368,7 +371,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 validator: (value) {
                   if (value.isEmpty) {
-                    return 'Please enter some text';
+                    return 'Please fill in the field';
                   }
                   return null;
                 },

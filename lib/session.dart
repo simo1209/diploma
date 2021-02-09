@@ -5,7 +5,7 @@ class Session {
   static final String host = "http://207.154.253.242:5000";
 
   static Future<http.StreamedResponse> login(email, password) async {
-    var uri = Uri.parse('$host/login');
+    var uri = Uri.parse('$host/accounts/login');
 
     var request = http.MultipartRequest('POST', uri);
     request.fields['email'] = email;
@@ -15,7 +15,7 @@ class Session {
   }
 
   static Future<http.StreamedResponse> register(Map<String, String> fields) {
-    var uri = Uri.parse('$host/register');
+    var uri = Uri.parse('$host/accounts/register');
 
     var request = http.MultipartRequest('POST', uri);
     fields.forEach((key, value) {

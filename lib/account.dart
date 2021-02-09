@@ -57,7 +57,7 @@ class AccountPageState extends State<AccountPage> {
         FutureBuilder(
           future: getAccountInformation(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
               return accountDetailsWidget(context, snapshot.data);
             } else if (snapshot.hasError) {
               return Text(snapshot.error.toString());
@@ -85,6 +85,12 @@ class AccountPageState extends State<AccountPage> {
               child: Text('Log Out', style: TextStyle(fontSize: 24)),
               onPressed: () => _logout(context),
             ),
+            RaisedButton(
+              child: Text('Transaction History', style: TextStyle(fontSize: 24)),
+              onPressed: () {
+                Navigator.of(context).pushNamed('/history');
+              },
+            )
           ],
         )
       ],
@@ -108,7 +114,7 @@ class AccountPageState extends State<AccountPage> {
 
   Future getAccountInformation() async {
     try {
-      var response = await Session.get("/account");
+      var response = await Session.get("/accounts/account");
       return response;
     } on Exception catch (_) {
       Scaffold.of(context).showSnackBar(SnackBar(
