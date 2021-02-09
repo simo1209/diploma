@@ -10,7 +10,7 @@
   <br>
 
 
-  <form class="form" role="form" method="post" action="">
+  <form class="form" role="form" method="post" action="/account/register">
 
     {{ form.csrf_token }}
     {{ form.hidden_tag() }}
@@ -34,7 +34,7 @@
 
 
       <button class="btn btn-success" type="submit">Register</button>
-      <a href="{{ url_for('user.login') }}">Sign in</a>
+      <a href="{{ url_for('account.login') }}">Sign in</a>
 
     </div>
 

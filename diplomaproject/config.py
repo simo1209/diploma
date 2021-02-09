@@ -19,6 +19,7 @@ class BaseConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
     QR_CODES = '/home/simo09/qr-codes'
+    FLASK_ADMIN_SWATCH = 'cerulean'
 
 
 class DevelopmentConfig(BaseConfig):

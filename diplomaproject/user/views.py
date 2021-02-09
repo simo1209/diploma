@@ -9,15 +9,17 @@ from diplomaproject.user.forms import LoginForm, RegisterForm
 from werkzeug.exceptions import Conflict, BadRequest, Unauthorized
 
 
-user_blueprint = Blueprint('user', __name__)
+account_blueprint = Blueprint('account', __name__)
+
+@account_blueprint.route('/register', methods=['GET'])
+def register_form():
+    form = RegisterForm(request.form)
+    return render_template('register.html', form=form)
 
 
-@user_blueprint.route('/register', methods=['GET', 'POST'])
+@account_blueprint.route('/accounts/register', methods=['POST'])
 def register():
     form = RegisterForm(request.form)
-
-    if request.method == 'GET':
-        return render_template('register.html', form=form)
 
     if form.validate_on_submit():
 
@@ -49,12 +51,24 @@ def register():
 
         login_user(account)
 
-        return render_template('menu.html', account=account), 201
+        return render_template(url_for('account.menu')), 201
     else:
         raise BadRequest('Invalid form data')
 
-@user_blueprint.route('/', methods=['GET', 'POST'])
-@user_blueprint.route('/login', methods=['GET', 'POST'])
+@account_blueprint.route('/', methods=['GET'])
+@account_blueprint.route('/login', methods=['GET'])
+def login_form():
+    form = LoginForm(request.form)
+    return render_template('login.html', title='Please Login', form=form)
+
+
+@account_blueprint.route('/account', methods=['GET'])
+@login_required
+def account_view():
+    account = Account.query.filter_by(id=current_user.id).first()
+    return render_template('menu.html', account=account)
+
+@account_blueprint.route('/accounts/login', methods=['POST'])
 def login():
     form = LoginForm(request.form)
 
@@ -70,13 +84,13 @@ def login():
         else:
             return Unauthorized('Wrong username or password')
 
-@user_blueprint.route('/logout')
+@account_blueprint.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('user.login'))
 
-@user_blueprint.route('/account', methods=['GET'])
+@account_blueprint.route('/accounts/account', methods=['GET'])
 @login_required
 def get_account():
     return jsonify(
