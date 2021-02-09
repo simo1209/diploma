@@ -53,7 +53,7 @@ def register():
 
         return render_template(url_for('account.menu')), 201
     else:
-        raise BadRequest('Invalid form data')
+        raise Unauthorized('Invalid form data')
 
 @account_blueprint.route('/', methods=['GET'])
 @account_blueprint.route('/login', methods=['GET'])
@@ -72,23 +72,19 @@ def account_view():
 def login():
     form = LoginForm(request.form)
 
-    if request.method == 'GET':
-        return render_template('login.html', title='Please Login', form=form)
-
     if form.validate_on_submit():
         account = Account.query.filter_by(email=form.email.data).first()
         if account and bcrypt.check_password_hash(
                 account.password, request.form['password']):
             login_user(account)
             return render_template('menu.html', account=account), 200
-        else:
-            return Unauthorized('Wrong username or password')
+    return Unauthorized('Wrong username or password')
 
 @account_blueprint.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('user.login'))
+    return redirect(url_for('account.login_form'))
 
 @account_blueprint.route('/accounts/account', methods=['GET'])
 @login_required
