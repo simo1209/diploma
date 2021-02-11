@@ -144,8 +144,23 @@ transfer_history = db.DDL(
     "t.creation_time AS date, CONCAT(a.first_name, ' ', a.last_name) AS counterparty "
     "FROM transactions AS t "
     "JOIN accounts a on t.buyer_id = a.id "
-    "WHERE t.seller_id = account_id "
+    "WHERE t.seller_id = account_id; "
     "END; $$ LANGUAGE PLPGSQL"
+)
+
+db.event.listen(
+    Transaction.__table__, 'after_create',
+    transfer_func
+)
+
+db.event.listen(
+    Transaction.__table__, 'after_create',
+    transfer_trig
+)
+
+db.event.listen(
+    Transaction.__table__, 'after_create',
+    transfer_history
 )
 
 db.create_all()
