@@ -48,7 +48,6 @@ def create_transaction():
             (transaction.id).bit_length()//8 + 1, 'big'))
         ba.extend(secret_id)
 
-        print(ba.decode())
         img = qrc(ba.decode())
         img.save('{}/{}.png'.format(app.config['QR_CODES'], transaction.id))
 
