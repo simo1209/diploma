@@ -32,8 +32,8 @@ class Account(db.Model):
     last_name = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
-    is_admin = db.Column(db.Boolean, nullable=False, default=False)
-    login_attempts = db.Column(db.Integer, nullable=False, default=0)
+    is_admin = db.Column(db.Boolean, nullable=False, server_default='f')
+    login_attempts = db.Column(db.Integer, nullable=False, server_default=db.text('0'))
     registered_on = db.Column(
         db.DateTime, nullable=False, server_default=db.text('NOW()'))
     phone = db.Column(db.String(10), nullable=False)
@@ -44,7 +44,7 @@ class Account(db.Model):
 
     UCN = db.Column(db.String(10), nullable=False)
     balance = db.Column(db.Numeric, db.CheckConstraint(
-        'balance>=0'), nullable=False, server_default='0.0')
+        'balance>=0'), nullable=False, server_default=db.text('0'))
 
     def __init__(self, first_name, last_name,  email, password, phone, address, UCN):
         self.first_name = first_name
@@ -78,6 +78,11 @@ class TransactionStatus(enum.Enum):
     completed = 2
     expired = 3
 
+class TransactionType(enum.Enum):
+    withdraw = 1
+    deposit = 2
+    payment = 3
+
 
 class Transaction(db.Model):
 
@@ -97,6 +102,8 @@ class Transaction(db.Model):
     description = db.Column(db.Text, nullable=False)
     status = db.Column(db.Enum(TransactionStatus),
                        nullable=False, server_default='created')
+    type = db.Column(db.Enum(TransactionType),
+                       nullable=False, server_default='payment')
     creation_time = db.Column(
         db.DateTime, nullable=False, server_default=db.text('NOW()'))
 
