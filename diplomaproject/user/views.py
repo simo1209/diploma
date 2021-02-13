@@ -51,7 +51,7 @@ def register():
 
         login_user(account)
 
-        return render_template(url_for('account.menu')), 201
+        return render_template('menu.html', account=account), 201
     else:
         raise Unauthorized('Invalid form data')
 
@@ -76,8 +76,13 @@ def login():
         account = Account.query.filter_by(email=form.email.data).first()
         if account and bcrypt.check_password_hash(
                 account.password, request.form['password']):
+            account.login_attempts = 0
+            db.session.commit()
             login_user(account)
-            return render_template(url_for('account.account_view')), 200
+            return render_template('menu.html', account=account), 200
+        elif account:
+            account.login_attempts+=1
+            db.session.commit()            
     return Unauthorized('Wrong username or password')
 
 @account_blueprint.route('/logout')
