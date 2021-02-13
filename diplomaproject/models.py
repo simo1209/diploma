@@ -32,6 +32,8 @@ class Account(db.Model):
     last_name = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    login_attempts = db.Column(db.Integer, nullable=False, default=0)
     registered_on = db.Column(
         db.DateTime, nullable=False, server_default=db.text('NOW()'))
     phone = db.Column(db.String(10), nullable=False)
@@ -59,7 +61,7 @@ class Account(db.Model):
         return True
 
     def is_active(self):
-        return True
+        return self.login_attempts < 10
 
     def is_anonymous(self):
         return False
@@ -83,7 +85,7 @@ class Transaction(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     seller_id = db.Column(db.Integer, db.ForeignKey(
-        'accounts.id'), nullable=False)
+        'accounts.id'), nullable=True)
     seller = db.relationship(
         'Account', foreign_keys=[seller_id])
     buyer_id = db.Column(db.Integer,  db.CheckConstraint('buyer_id!=seller_id'), db.ForeignKey(
