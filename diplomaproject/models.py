@@ -113,22 +113,42 @@ class Transaction(db.Model):
         self. description = description
 
 
-transfer_func = db.DDL(
+payment_func = db.DDL(
     "CREATE OR REPLACE FUNCTION execute_payment() "
     "RETURNS TRIGGER AS $$ "
     "BEGIN "
-    "IF NEW.buyer_id IS NOT NULL THEN "
+    "IF NEW.buyer_id IS NOT NULL AND NEW.status == 'created'::transactiontype THEN "
     "UPDATE accounts SET balance = balance - NEW.amount WHERE accounts.id = NEW.buyer_id; "
     "UPDATE accounts SET balance = balance + NEW.amount WHERE accounts.id = NEW.seller_id; "
     "NEW.status = 'completed'; "
     "END IF; "
     "RETURN NEW; "
-    "END; $$ LANGUAGE PLPGSQL"
+    "END; $$ LANGUAGE PLPGSQL "
 )
 
-transfer_trig = db.DDL(
+payment_trig = db.DDL(
     "CREATE TRIGGER execute_payment_trigger BEFORE UPDATE ON transactions "
     "FOR EACH ROW EXECUTE PROCEDURE execute_payment();"
+)
+
+admin_func = db.DDL(
+    "CREATE OR REPLACE FUNCTION administrative_transaction() "
+    "RETURNS TRIGGER AS $$ "
+    "BEGIN "
+    "IF NEW.type = 'deposit' THEN "
+    "UPDATE accounts SET balance = balance + NEW.amount WHERE accounts.id = NEW.buyer_id; "
+    "NEW.status = 'completed'; "
+    "ELSEIF NEW.type = 'withdraw' THEN "
+    "UPDATE accounts SET balance = balance - NEW.amount WHERE accounts.id = NEW.buyer_id; "
+    "NEW.status = 'completed'; "
+    "END IF; "
+    "RETURN NEW; "
+    "END; $$ LANGUAGE PLPGSQL "
+)
+
+admin_trig = db.DDL(
+    "CREATE TRIGGER administrative_transaction_trigger BEFORE INSERT ON transactions "
+    "FOR EACH ROW EXECUTE PROCEDURE administrative_transaction();"
 )
 
 transfer_history = db.DDL(
@@ -159,12 +179,22 @@ transfer_history = db.DDL(
 
 db.event.listen(
     Transaction.__table__, 'after_create',
-    transfer_func
+    payment_func
 )
 
 db.event.listen(
     Transaction.__table__, 'after_create',
-    transfer_trig
+    payment_trig
+)
+
+db.event.listen(
+    Transaction.__table__, 'after_create',
+    admin_func
+)
+
+db.event.listen(
+    Transaction.__table__, 'after_create',
+    admin_trig
 )
 
 db.event.listen(

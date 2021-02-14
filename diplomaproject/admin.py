@@ -77,6 +77,8 @@ class AdminTransactionModelView(ModelView):
     can_export = True
     can_delete = False
 
+    form_excluded_columns = ['seller', 'status', 'creation_time']
+
     def is_accessible(self):
         return current_user.is_authenticated
 
