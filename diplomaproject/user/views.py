@@ -74,7 +74,9 @@ def login():
 
     if form.validate_on_submit():
         account = Account.query.filter_by(email=form.email.data).first()
-        if account and bcrypt.check_password_hash(
+        if account and not account.is_active():
+            return Unauthorized('Account is locked. Contact an administrator')
+        if account and account.is_active() and bcrypt.check_password_hash(
                 account.password, request.form['password']):
             account.login_attempts = 0
             db.session.commit()
