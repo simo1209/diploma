@@ -70,7 +70,7 @@ class Account(db.Model):
         return self.id
 
     def __repr__(self):
-        return '<Account {0}>'.format(self.email)
+        return '{0} {1}'.format(self.first_name, self.last_name)
 
 
 class TransactionStatus(enum.Enum):
@@ -114,7 +114,7 @@ class Transaction(db.Model):
 
 
 transfer_func = db.DDL(
-    "CREATE OR REPLACE FUNCTION transfer_money() "
+    "CREATE OR REPLACE FUNCTION execute_payment() "
     "RETURNS TRIGGER AS $$ "
     "BEGIN "
     "IF NEW.buyer_id IS NOT NULL THEN "
@@ -127,8 +127,8 @@ transfer_func = db.DDL(
 )
 
 transfer_trig = db.DDL(
-    "CREATE TRIGGER transfer_money_trigger BEFORE UPDATE ON transactions "
-    "FOR EACH ROW EXECUTE PROCEDURE transfer_money();"
+    "CREATE TRIGGER execute_payment_trigger BEFORE UPDATE ON transactions "
+    "FOR EACH ROW EXECUTE PROCEDURE execute_payment();"
 )
 
 transfer_history = db.DDL(

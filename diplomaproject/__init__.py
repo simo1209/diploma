@@ -4,7 +4,6 @@ from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
 from flask import json, request, render_template
 
 
@@ -32,12 +31,20 @@ bootstrap = Bootstrap(app)
 login_manager.login_view = "account.login"
 login_manager.login_message_category = 'danger'
 
-from diplomaproject.models import Account,Transaction
+from diplomaproject.models import Account, Transaction
+from diplomaproject.admin import UserAccountModelView, UserTransactionModelView
+from diplomaproject.admin import AdminAccountModelView, AdminTransactionModelView
 
 
-admin = Admin(app, url='/admin', template_mode='bootstrap3')
-admin.add_view(ModelView(Account, db.session, endpoint='/acc'))
-admin.add_view(ModelView(Transaction, db.session, endpoint='/trans'))
+user_details = Admin(app, endpoint='details',template_mode='bootstrap3', url='/details')
+
+user_details.add_view(UserAccountModelView(Account, db.session, endpoint='/acc'))
+user_details.add_view(UserTransactionModelView(Transaction, db.session, endpoint='/trans'))
+
+admin = Admin(app, endpoint='admin', template_mode='bootstrap3', url='/admin')
+
+admin.add_view(AdminAccountModelView(Account, db.session, endpoint='/admin_acc'))
+admin.add_view(AdminTransactionModelView(Transaction, db.session, endpoint='/admin_trans'))
 
 @login_manager.user_loader
 def load_user(account_id):

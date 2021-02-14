@@ -9,6 +9,7 @@
 
 <a href="/transactions/create"><button class="btn btn-primary">Create Transaction</button></a>
 <a href="/logout"><button class="btn btn-danger">Sign Out</button></a>
+<a href="/{{ 'admin' if account.is_admin else 'details' }}"><button class="btn btn-info">Details and History</button></a>
 
 
 {% endblock content %}
