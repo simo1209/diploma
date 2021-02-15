@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
@@ -50,23 +50,22 @@ admin.add_view(AdminTransactionModelView(Transaction, db.session, endpoint='/adm
 def load_user(account_id):
     return Account.query.filter(Account.id == int(account_id)).first()
 
+from diplomaproject.errors import BaseHTTPException
+
+@app.errorhandler(BaseHTTPException)
+def custom_error_handler(e):
+    
+    print(e)
+    print(type(e))
+
+    print('Custom error found')
+    response = jsonify(e.to_dict())
+    response.status_code = e.status_code
+    return response
+
 from diplomaproject.user.views import account_blueprint
 from diplomaproject.transactions.views import transaction_blueprint
 
 app.register_blueprint(account_blueprint)
 app.register_blueprint(transaction_blueprint)
 
-from werkzeug.exceptions import HTTPException
-
-@app.errorhandler(HTTPException)
-def handle_exception(e):
-    response = e.get_response()
-    if isinstance(e, HTTPException):
-        response.data = json.dumps({
-            "code": e.code,
-            "name": e.name,
-            "description": e.description,
-        })
-        response.content_type = "application/json"
-        return response
-    return render_template("500_generic.html", e=e), 500

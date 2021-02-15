@@ -3,13 +3,14 @@ from flask_login import current_user, login_required
 from cryptography.fernet import Fernet, InvalidToken
 from qrcode import make as qrc
 from sqlalchemy import exc
-from werkzeug.exceptions import BadRequest
 
 from diplomaproject import app, db
 from diplomaproject.models import Transaction
 from diplomaproject.models import TransactionStatus
 from diplomaproject.models import Account
 from diplomaproject.transactions.forms import TransactionForm
+from diplomaproject.errors import BadRequest
+
 
 key_file = open('secret.key', 'rb')
 key = key_file.read()

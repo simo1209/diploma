@@ -6,7 +6,7 @@ from diplomaproject import bcrypt, db
 from diplomaproject.models import Account
 from diplomaproject.models import Address
 from diplomaproject.user.forms import LoginForm, RegisterForm
-from werkzeug.exceptions import Conflict, BadRequest, Unauthorized
+from diplomaproject.errors import BadRequest, Unauthorized, Conflict
 
 
 account_blueprint = Blueprint('account', __name__)
@@ -85,7 +85,7 @@ def login():
         elif account:
             account.login_attempts+=1
             db.session.commit()            
-    return Unauthorized('Wrong username or password')
+    raise Unauthorized('Wrong username or password')
 
 @account_blueprint.route('/logout')
 @login_required
