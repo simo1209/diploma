@@ -63,7 +63,3 @@ class RegisterForm(FlaskForm):
         'Zip/Postal Code',
         validators=[DataRequired()]
     )
-
-    def validate_email(form, field):
-        if db.session.query(Account).filter_by(email=field.data).count() > 0:
-            raise ValidationError('Duplicate email')
