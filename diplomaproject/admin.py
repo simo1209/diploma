@@ -1,11 +1,16 @@
 
-from flask_admin.contrib.sqla import ModelView
+from flask_admin.contrib.sqla import ModelView, filters
 from flask_login import current_user, login_required
 from werkzeug.exceptions import Unauthorized, Forbidden
 from sqlalchemy import func, or_
 
 from diplomaproject.models import Account, Transaction
 
+class TransactionDateFilter(filters.FilterConverter):
+    datetime_filters = (
+        filters.DateTimeEqualFilter,
+        filters.DateTimeBetweenFilter
+    )
 
 class UserAccountModelView(ModelView):
     can_create = False
@@ -33,6 +38,9 @@ class UserTransactionModelView(ModelView):
     can_delete = False
     can_edit = False
     can_export = True
+
+    filter_converter = TransactionDateFilter()
+    column_filters = ['creation_time']
 
     def is_accessible(self):
         return current_user.is_authenticated
@@ -78,6 +86,9 @@ class AdminTransactionModelView(ModelView):
     can_delete = False
 
     form_excluded_columns = ['seller', 'status', 'creation_time']
+    filter_converter = TransactionDateFilter()
+    column_filters = ['creation_time']
+
 
     def is_accessible(self):
         return current_user.is_authenticated
