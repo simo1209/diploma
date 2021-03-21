@@ -106,6 +106,8 @@ class Transaction(db.Model):
                        nullable=False, server_default='payment')
     creation_time = db.Column(
         db.DateTime, nullable=False, server_default=db.text('NOW()'))
+    status_update_time = db.Column(
+        db.DateTime, nullable=True)
 
     def __init__(self, seller, amount, description):
         self.seller = seller
@@ -121,6 +123,7 @@ payment_func = db.DDL(
     "UPDATE accounts SET balance = balance - NEW.amount WHERE accounts.id = NEW.buyer_id; "
     "UPDATE accounts SET balance = balance + NEW.amount WHERE accounts.id = NEW.seller_id; "
     "NEW.status = 'completed'; "
+    "NEW.status_update_time = NOW();"
     "END IF; "
     "RETURN NEW; "
     "END; $$ LANGUAGE PLPGSQL "
@@ -138,9 +141,11 @@ admin_func = db.DDL(
     "IF NEW.type = 'deposit' THEN "
     "UPDATE accounts SET balance = balance + NEW.amount WHERE accounts.id = NEW.buyer_id; "
     "NEW.status = 'completed'; "
+    "NEW.status_update_time = NOW();"
     "ELSEIF NEW.type = 'withdraw' THEN "
     "UPDATE accounts SET balance = balance - NEW.amount WHERE accounts.id = NEW.buyer_id; "
     "NEW.status = 'completed'; "
+    "NEW.status_update_time = NOW();"
     "END IF; "
     "RETURN NEW; "
     "END; $$ LANGUAGE PLPGSQL "
