@@ -40,7 +40,7 @@ class UserTransactionModelView(ModelView):
     can_export = True
 
     filter_converter = TransactionDateFilter()
-    column_filters = ['creation_time']
+    column_filters = ['creation_time', 'transaction_type', 'transaction_status']
 
     def is_accessible(self):
         return current_user.is_authenticated
@@ -87,7 +87,7 @@ class AdminTransactionModelView(ModelView):
 
     form_excluded_columns = ['seller', 'status', 'creation_time']
     filter_converter = TransactionDateFilter()
-    column_filters = ['creation_time']
+    column_filters = ['creation_time', 'transaction_type', 'transaction_status']
 
 
     def is_accessible(self):
