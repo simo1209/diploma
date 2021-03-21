@@ -73,15 +73,27 @@ class Account(db.Model):
         return '{0} {1}'.format(self.first_name, self.last_name)
 
 
-class TransactionStatus(enum.Enum):
-    created = 1
-    completed = 2
-    expired = 3
+class TransactionStatus(db.Model):
 
-class TransactionType(enum.Enum):
-    withdraw = 1
-    deposit = 2
-    payment = 3
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    status = db.Column(db.Text, nullable=False, unique=True)
+
+    def __init__(self, status):
+        self.status = status
+
+    def __repr__(self):
+        return '<Status {0}>'.format(self.status)
+
+class TransactionType(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    type = db.Column(db.Text, nullable=False, unique=True)
+
+    def __init__(self, type):
+        self.type = type
+
+    def __repr__(self):
+        return '<Type {0}>'.format(self.type)
 
 
 class Transaction(db.Model):
@@ -100,10 +112,16 @@ class Transaction(db.Model):
     amount = db.Column(db.Numeric, db.CheckConstraint(
         'amount>0'), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    status = db.Column(db.Enum(TransactionStatus),
-                       nullable=False, server_default='created')
-    type = db.Column(db.Enum(TransactionType),
-                       nullable=False, server_default='payment')
+    transaction_status_id = db.Column(db.Integer, db.ForeignKey('transaction_status.id'),
+                           nullable=False)
+    transaction_status = db.relationship('TransactionStatus',
+                              backref=db.backref('transaction_status', lazy=True))
+
+    transaction_type_id = db.Column(db.Integer, db.ForeignKey('transaction_type.id'),
+                           nullable=False)
+    transaction_type = db.relationship('TransactionType',
+                              backref=db.backref('transaction_type', lazy=True))
+
     creation_time = db.Column(
         db.DateTime, nullable=False, server_default=db.text('NOW()'))
     status_update_time = db.Column(
@@ -119,10 +137,10 @@ payment_func = db.DDL(
     "CREATE OR REPLACE FUNCTION execute_payment() "
     "RETURNS TRIGGER AS $$ "
     "BEGIN "
-    "IF NEW.buyer_id IS NOT NULL AND NEW.status = 'created' THEN "
+    "IF NEW.buyer_id IS NOT NULL AND NEW.transaction_status_id = (SELECT id from transaction_status WHERE status = 'created') THEN "
     "UPDATE accounts SET balance = balance - NEW.amount WHERE accounts.id = NEW.buyer_id; "
     "UPDATE accounts SET balance = balance + NEW.amount WHERE accounts.id = NEW.seller_id; "
-    "NEW.status = 'completed'; "
+    "NEW.transaction_status_id = (SELECT id from transaction_status WHERE status = 'completed'); "
     "NEW.status_update_time = NOW();"
     "END IF; "
     "RETURN NEW; "
@@ -138,13 +156,13 @@ admin_func = db.DDL(
     "CREATE OR REPLACE FUNCTION administrative_transaction() "
     "RETURNS TRIGGER AS $$ "
     "BEGIN "
-    "IF NEW.type = 'deposit' THEN "
+    "IF NEW.transaction_type_id = (SELECT id FROM transaction_type WHERE type = 'deposit') THEN "
     "UPDATE accounts SET balance = balance + NEW.amount WHERE accounts.id = NEW.buyer_id; "
-    "NEW.status = 'completed'; "
+    "NEW.transaction_status_id = (SELECT id from transaction_status WHERE status = 'completed'); "
     "NEW.status_update_time = NOW();"
-    "ELSEIF NEW.type = 'withdraw' THEN "
+    "ELSEIF NEW.transaction_type_id = (SELECT id FROM transaction_type WHERE type = 'withdraw') THEN "
     "UPDATE accounts SET balance = balance - NEW.amount WHERE accounts.id = NEW.buyer_id; "
-    "NEW.status = 'completed'; "
+    "NEW.transaction_status_id = (SELECT id from transaction_status WHERE status = 'completed'); "
     "NEW.status_update_time = NOW();"
     "END IF; "
     "RETURN NEW; "
