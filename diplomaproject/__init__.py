@@ -55,13 +55,12 @@ from diplomaproject.errors import BaseHTTPException
 @app.errorhandler(BaseHTTPException)
 def custom_error_handler(e):
     
-    print(e)
-    print(type(e))
+    if request.args.get('response-type') == 'json':
+        response = jsonify(e.to_dict())
+        response.status_code = e.status_code
+        return response
 
-    print('Custom error found')
-    response = jsonify(e.to_dict())
-    response.status_code = e.status_code
-    return response
+    return render_template('error.html', e=e)
 
 from diplomaproject.user.views import account_blueprint
 from diplomaproject.transactions.views import transaction_blueprint
