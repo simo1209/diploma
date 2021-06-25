@@ -1,5 +1,4 @@
-import datetime
-import enum
+from time import perf_counter as pc
 
 from backoffice import app, db, bcrypt
 
@@ -135,7 +134,7 @@ class Account(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text, nullable=False)
-    email = db.Column(db.Text, unique=False, nullable=False)
+    email = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
     login_attempts = db.Column(
         db.Integer, nullable=False, server_default=db.text('0'))
@@ -161,9 +160,11 @@ class Account(db.Model):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = bcrypt.generate_password_hash(
-            password, app.config.get('BCRYPT_LOG_ROUNDS')
-        ).decode('utf-8')
+        # self.password = bcrypt.generate_password_hash(
+        #     password, app.config.get('BCRYPT_LOG_ROUNDS')
+        # ).decode('utf-8')
+        # Use to lower mock account creating by 2190ms
+        self.password = '$2y$12$c56XC.jqJt9tvDo.sraAEes6Oly86VGfNgORhXck.bWjnBZ97Rymu'
         self.phone = phone
         self.address = address
         self.UCN = UCN
@@ -181,7 +182,7 @@ class Account(db.Model):
         return self.id
 
     def __repr__(self):
-        return '{0} {1}'.format(self.first_name, self.last_name)
+        return '{0} {1} {2}'.format(self.first_name, self.last_name, self.email)
 
 
 class TransactionStatus(db.Model):
