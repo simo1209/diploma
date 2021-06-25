@@ -18,10 +18,12 @@ class BaseConfig(object):
     BCRYPT_LOG_ROUNDS = 10
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
-    QR_CODES = '/home/simo09/qr-codes'
+    QR_CODES = '/home/simo/qr-codes'
+    FLASK_ADMIN_SWATCH = 'cerulean'
+
 
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     BCRYPT_LOG_ROUNDS = 12
-    SQLALCHEMY_DATABASE_URI = 'postgresql://simo09:12092002Sim2@localhost:5433/qrpayment'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://simo:12092002SsG@localhost:5432/qrpayment'

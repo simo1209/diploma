@@ -1,12 +1,17 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp, Optional
+from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp, Optional, ValidationError
 
+from diplomaproject import db
+from diplomaproject.models import Account
 
 class LoginForm(FlaskForm):
     email = StringField('Email Address', [DataRequired(), Email()])
     password = PasswordField('Password', [DataRequired()])
 
+    def validate_email(form, field):
+        if db.session.query(Account).filter_by(email=field.data).count() == 0:
+            raise ValidationError('Account not found')
 
 class RegisterForm(FlaskForm):
     first_name = StringField(
@@ -33,11 +38,11 @@ class RegisterForm(FlaskForm):
     )
     phone = StringField(
         'Phone Number',
-        validators=[DataRequired(), Regexp(r'\d{10}')]
+        validators=[DataRequired(), Regexp(r'\d{10}'), Length(min=10,max=10)]
     )
     UCN = StringField(
         'Unique citizenship number',
-        validators=[DataRequired(), Regexp(r'\d{10}')]
+        validators=[DataRequired(), Regexp(r'\d{10}'), Length(min=10,max=10)]
     )
     country = StringField(
         'Country',

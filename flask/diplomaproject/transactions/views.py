@@ -4,12 +4,13 @@ from cryptography.fernet import Fernet, InvalidToken
 from qrcode import make as qrc
 from sqlalchemy import exc
 
-
 from diplomaproject import app, db
 from diplomaproject.models import Transaction
-from diplomaproject.models import TransactionStatus
+from diplomaproject.models import TransactionStatus, TransactionType
 from diplomaproject.models import Account
 from diplomaproject.transactions.forms import TransactionForm
+from diplomaproject.errors import BadRequest
+
 
 key_file = open('secret.key', 'rb')
 key = key_file.read()
@@ -31,9 +32,11 @@ def create_transaction():
     if form.validate_on_submit():
 
         transaction = Transaction(
-            current_user,
+            Account.query.filter_by(id=current_user.id).first(),
             float(form.amount.data),
-            form.description.data
+            form.description.data,
+            TransactionStatus.query.filter_by(status='created').first(),
+            TransactionType.query.filter_by(type='payment').first()
         )
 
         db.session.add(transaction)
@@ -41,20 +44,19 @@ def create_transaction():
             db.session.commit()
         except exc.IntegrityError:
             db.session.rollback()
-            return 'Invalid Transaction Amount', 400
+            raise BadRequest('Invalid Transaction Amount')
 
         ba = bytearray('QRPayment:'.encode())  # Distinct QR codes
         secret_id = fernet.encrypt((transaction.id).to_bytes(
             (transaction.id).bit_length()//8 + 1, 'big'))
         ba.extend(secret_id)
 
-        print(ba.decode())
         img = qrc(ba.decode())
         img.save('{}/{}.png'.format(app.config['QR_CODES'], transaction.id))
 
         return redirect(url_for('transaction.qrcode', id=secret_id))
     else:
-        return 'Invalid form data', 400
+        raise BadRequest('Invalid form data')
 
 
 @transaction_blueprint.route('/qrcode/<id>')
@@ -62,7 +64,7 @@ def qrcode(id):
     try:
         image = int.from_bytes(fernet.decrypt(id.encode()), 'big')
     except InvalidToken:
-        return 'Supply valid id', 400
+        raise BadRequest('Supply valid id')
     return send_from_directory(app.config['QR_CODES'], '{}.png'.format(image))
 
 
@@ -72,7 +74,7 @@ def transaction_details(id):
     try:
         transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
     except InvalidToken:
-        return 'Supply valid id', 400
+        raise BadRequest('Supply valid id')
 
     return jsonify(
         Transaction.query
@@ -88,25 +90,25 @@ def transaction_details(id):
 def accept():
     payload = request.get_json()
     if not payload:
-        return 'Invalid payload', 400
+        raise BadRequest('Invalid Payload')
     id = payload['id']
     if not id:
-        return 'Supply Id', 400
+        raise BadRequest('Supply valid id')
     
     try:
         transaction_id = int.from_bytes(fernet.decrypt(id.encode()), 'big')
     except InvalidToken:
-        return 'Supply valid id', 400
+        raise BadRequest('Supply valid id')
 
     transaction = Transaction.query.filter_by(id=transaction_id).first()
     
-    if transaction.status == TransactionStatus.created:
+    if transaction.transaction_status == TransactionStatus.query.filter_by(status='created').first():
         transaction.buyer = current_user
         try:
             db.session.commit()
         except exc.IntegrityError:
             db.session.rollback()
-            return 'Insuficient Balance', 400
+            raise BadRequest('Transaction Error. Check your balance.')
         return 'Transaction Complete', 200
     else:
-        return 'Transaction Invalid', 400
+        raise BadRequest('Transaction Invalid')

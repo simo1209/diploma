@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block page_title %}- Server Error{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+  <div class="text-center">
+    <h1>{{e.code}}</h1>
+    <p>Sorry. Something went terribly wrong. Please contact an administrator.</p>
+  </div>
+</div>
+{% endblock %}
