@@ -1,0 +1,50 @@
+.
+├── README.md
+├── diploma_project.egg-info
+│   ├── PKG-INFO
+│   ├── SOURCES.txt
+│   ├── dependency_links.txt
+│   ├── requires.txt
+│   └── top_level.txt
+├── diplomaproject
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-38.pyc
+│   │   ├── config.cpython-38.pyc
+│   │   └── models.cpython-38.pyc
+│   ├── config.py
+│   ├── models.py
+│   ├── static
+│   │   ├── main.css
+│   │   └── main.js
+│   ├── templates
+│   │   ├── base.html
+│   │   ├── create_transaction.html
+│   │   ├── login.html
+│   │   └── register.html
+│   ├── transactions
+│   │   ├── __pycache__
+│   │   │   ├── forms.cpython-38.pyc
+│   │   │   └── views.cpython-38.pyc
+│   │   ├── forms.py
+│   │   └── views.py
+│   └── user
+│       ├── __pycache__
+│       │   ├── forms.cpython-38.pyc
+│       │   └── views.cpython-38.pyc
+│       ├── forms.py
+│       └── views.py
+├── diplomaproject.egg-info
+│   ├── PKG-INFO
+│   ├── SOURCES.txt
+│   ├── dependency_links.txt
+│   ├── requires.txt
+│   └── top_level.txt
+├── directory.txt
+├── elect pg_get_functiondef('functionname'::regproc);
+├── qr-codes
+├── requirements.txt
+├── secret.key
+└── setup.py
+
+11 directories, 36 files
