@@ -39,3 +39,15 @@ BEGIN
         WHERE t.seller_id = account_id;
 END;
 $$ LANGUAGE PLPGSQL
+
+
+CREATE TABLE transactions_history
+(
+    date         TIMESTAMP,
+    counterparty TEXT,
+    description  TEXT,
+    debit        NUMERIC,
+    credit       NUMERIC,
+    balance      NUMERIC,
+    user_id      INTEGER
+);
