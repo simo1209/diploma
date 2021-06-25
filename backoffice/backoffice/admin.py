@@ -1,10 +1,16 @@
 
-from os import name
+from re import T
+from flask.globals import request
+from flask_admin import expose
 from flask_admin.contrib.sqla import ModelView, filters
-from flask_login import current_user, login_required
-from werkzeug.exceptions import Unauthorized, Forbidden
-from sqlalchemy import func, or_
-from backoffice.models import Administrator, Permission, Role
+from flask_admin.model.template import TemplateLinkRowAction
+from flask_admin.model.template import EndpointLinkRowAction
+
+from flask_login import current_user
+from werkzeug.exceptions import Forbidden
+from backoffice import db
+from backoffice.models import Account
+from flask_admin.contrib.sqla.ajax import QueryAjaxModelLoader
 
 class TransactionDateFilter(filters.FilterConverter):
     datetime_filters = (
@@ -14,68 +20,124 @@ class TransactionDateFilter(filters.FilterConverter):
 
 class AccountModelView(ModelView):
 
+    column_exclude_list = ['password']
+    column_searchable_list = ['first_name', 'last_name', 'email']
+    form_excluded_columns = ['categoriess', 'login_attempts', 'registered_on', 'balance']
+    column_filters = ['balance']
+
+    list_template = "my_list.html"  # Override the default template
+    column_extra_row_actions = [  # Add a new action button
+        EndpointLinkRowAction("glyphicon glyphicon-list-alt", ".history_view"),
+    ]
+
+    @expose("/history", methods=["GET"])
+    def history_view(self):
+        
+        args = dict(request.args)
+        print(args['id'])
+
+        id = args['id']
+        
+        result = db.session.execute('SELECT * FROM transaction_history(:val)', {'val': id})
+        print(result)
+        rows = [row for row in result]
+        print(rows)
+
+        return self.render('transaction_history.html', rows=rows)
+
     def is_accessible(self):
-        return Permission.query.filter_by(name='view_accounts').first() in current_user.get_permissions()
+        return 'view_accounts' in current_user.get_permissions()
 
     def inaccessible_callback(self, name, **kwargs):
         raise Forbidden('You do not have required permission')
 
     @property
     def can_create(self):
-        return Permission.query.filter_by(name='create_accounts').first() in current_user.get_permissions()
+        return 'create_accounts' in current_user.get_permissions()
 
     @property
     def can_edit(self):
-        return Permission.query.filter_by(name='edit_accounts').first() in current_user.get_permissions()
+        return 'edit_accounts' in current_user.get_permissions()
+
+    @property
+    def can_export(self):
+        return 'export_accounts' in current_user.get_permissions()
 
 
 class AdministratorModelView(ModelView):
 
     def is_accessible(self):
-        return Permission.query.filter_by(name='view_administrators').first() in current_user.get_permissions()
+        return 'view_administrators' in current_user.get_permissions()
 
     def inaccessible_callback(self, name, **kwargs):
         raise Forbidden('You do not have required permission')
 
     @property
     def can_create(self):
-        return Permission.query.filter_by(name='create_administrators').first() in current_user.get_permissions()
+        return 'create_administrators' in current_user.get_permissions()
 
     @property
     def can_edit(self):
-        return Permission.query.filter_by(name='edit_administrators').first() in current_user.get_permissions()
+        return 'edit_administrators' in current_user.get_permissions()
+
+class TransactionDateFilter(filters.FilterConverter):
+
+    # float_filters = (
+    #     filters.FloatGreaterFilter,
+    #     filters.FloatSmallerFilter
+    # )
+
+    datetime_filters = (
+        filters.DateTimeBetweenFilter
+    )
+
+
 
 class TransactionModelView(ModelView):
 
+    column_searchable_list = ['seller.first_name', 'seller.last_name', 'seller.email', 'buyer.first_name', 'buyer.last_name', 'buyer.email', 'description']
+    form_excluded_columns = ['categories', 'creation_time', 'status_update_time']
+
+    column_filters = ['amount', 'status_update_time']
+
+    form_ajax_refs = {
+        'seller': QueryAjaxModelLoader('seller', db.session, Account, fields=['email'], page_size=10),
+        'buyer': QueryAjaxModelLoader('buyer', db.session, Account, fields=['email'], page_size=10)
+    }
+
     def is_accessible(self):
-        return Permission.query.filter_by(name='view_transactions').first() in current_user.get_permissions()
+        return 'view_transactions' in current_user.get_permissions()
 
     def inaccessible_callback(self, name, **kwargs):
         raise Forbidden('You do not have required permission')
 
     @property
     def can_create(self):
-        return Permission.query.filter_by(name='create_transactions').first() in current_user.get_permissions()
+        return 'create_transactions' in current_user.get_permissions()
 
     @property
     def can_edit(self):
-        return Permission.query.filter_by(name='edit_transactions').first() in current_user.get_permissions()
+        return 'edit_transactions' in current_user.get_permissions()
+
+    @property
+    def can_export(self):
+        return 'export_transactions' in current_user.get_permissions()
 
 class RoleModelView(ModelView):
 
     def is_accessible(self):
-        return Permission.query.filter_by(name='view_roles').first() in current_user.get_permissions()
+        return 'view_roles' in current_user.get_permissions()
 
     def inaccessible_callback(self, name, **kwargs):
         raise Forbidden('You do not have required permission')
 
     @property
     def can_create(self):
-        return Permission.query.filter_by(name='create_roles').first() in current_user.get_permissions()
+        return 'create_roles' in current_user.get_permissions()
 
     @property
     def can_edit(self):
-        return Permission.query.filter_by(name='edit_roles').first() in current_user.get_permissions()
+        return 'edit_roles' in current_user.get_permissions()
 
 
 # class AccountModelView(ModelView):
