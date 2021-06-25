@@ -1,0 +1,5 @@
+<manifest package="bg.simo09.diploma_project">
+    <!-- Flutter needs it to communicate with the running application
+         to allow setting breakpoints, to provide hot reload, etc.
+    -->
+</manifest>
