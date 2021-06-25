@@ -1,0 +1,8 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<header class="content-header">
+    <h1>Hello {{account.first_name}} {{account.last_name}}</h1>
+</header>
+<p>From here you can edit your account info and see your transactions</p>
+<a href="/account"><button class="btn btn-primary">Menu</button></a>
+{% endblock %}
