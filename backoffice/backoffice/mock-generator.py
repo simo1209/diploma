@@ -1,23 +1,45 @@
 import psycopg2
-import pandas as pd
-from backoffice import bcrypt
-
-thousand_names = pd.read_csv("./baby-names.csv", nrows=100, usecols=['name'])
-familly_names = thousand_names.copy()
+import random
+from time import perf_counter
 
 conn = psycopg2.connect("dbname=qrpayment user=simo")
 cur = conn.cursor()
 
-for index1, row1 in thousand_names.iterrows():
-    for index2, row2 in familly_names.iterrows():
-        first_name = row1['name']
-        last_name = row2['name']
-        cur.execute("INSERT INTO accounts(first_name, last_name, email, password, phone, address_id, \"UCN\", company_id) VALUES (%s, %s, %s, %s, '1234567890', 2, '1234567890', null);",
-        (first_name, last_name, first_name+last_name+'@example.com',bcrypt.generate_password_hash(first_name+last_name, 12).decode('utf-8'),))
-        print(first_name, last_name)
+transactions = [
+    {'amount':1,'description':'Icecream'},
+    {'amount':0.5,'description':'Water'},
+    {'amount':2,'description':'Chips'},
+    {'amount':2.5,'description':'Sandwich'},
+]
+
+n = 50000
+
+# start = perf_counter()
+for i in range(n):
+    seller = random.randint(1, n)
+    buyer = random.randint(1, n)
+    if seller == buyer:
+        continue
+    amount, description = random.choice(transactions).values()
+    print(amount, description)
+    cur.execute('INSERT INTO transactions(seller_id, amount, description, transaction_type_id, transaction_status_id) VALUES (%s, %s, %s, 3, 1) RETURNING transactions.id;', (seller, amount, description) )
+    transaction_id = cur.fetchone()[0]
     conn.commit()
 
+    print(transaction_id)
+    cur.execute('UPDATE transactions SET buyer_id = %s WHERE id = %s', (buyer, transaction_id,) )
+# end = perf_counter()
+# print(end-start)
 
+
+
+# start = perf_counter()
+# for i in range(n):
+    # cur.execute("INSERT INTO transactions(buyer_id, amount, description, transaction_type_id, transaction_status_id) VALUES (%s, 249000, 'Deposit into account', 2, 2);", (i+1,))
+# end = perf_counter()
+# print(end-start)
+
+conn.commit()
 cur.close()
 conn.close()
 
