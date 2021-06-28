@@ -73,7 +73,7 @@ BEGIN
         FROM transactions AS t
                  LEFT JOIN accounts b on t.buyer_id = b.id
                  LEFT JOIN accounts s on t.seller_id = s.id
-        WHERE t.buyer_id = 9
+        WHERE t.buyer_id = account_id
         UNION ALL
         SELECT t.creation_time                                                  AS date,
                CONCAT(b.first_name, ' ', b.last_name)                           AS counterparty,
@@ -84,7 +84,7 @@ BEGIN
         FROM transactions AS t
                  LEFT JOIN accounts b on t.buyer_id = b.id
                  LEFT JOIN accounts s on t.seller_id = s.id
-        WHERE t.seller_id = 9;
+        WHERE t.seller_id = account_id;
 END;
 $$ LANGUAGE PLPGSQL;
 
@@ -92,13 +92,3 @@ SELECT *
 FROM transaction_history(9);
 
 
-CREATE TABLE transactions_history
-(
-    date         TIMESTAMP DEFAULT NOW(),
-    counterparty TEXT,
-    description  TEXT,
-    debit        NUMERIC,
-    credit       NUMERIC,
-    balance      NUMERIC,
-    user_id      INTEGER
-);
