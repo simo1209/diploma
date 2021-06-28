@@ -19,7 +19,12 @@ class TransactionDateFilter(filters.FilterConverter):
         filters.DateTimeBetweenFilter
     )
 
-class AccountModelView(ModelView):
+class CustomModelView(ModelView):
+
+    def inaccessible_callback(self, name, **kwargs):
+        raise Forbidden('You do not have required permission')
+
+class AccountModelView(CustomModelView):
 
     column_exclude_list = ['password']
     column_searchable_list = ['first_name', 'last_name', 'email']
@@ -45,9 +50,6 @@ class AccountModelView(ModelView):
     def is_accessible(self):
         return 'view_accounts' in current_user.get_permissions()
 
-    def inaccessible_callback(self, name, **kwargs):
-        raise Forbidden('You do not have required permission')
-
     @property
     def can_create(self):
         return 'create_accounts' in current_user.get_permissions()
@@ -61,13 +63,10 @@ class AccountModelView(ModelView):
         return 'export_accounts' in current_user.get_permissions()
 
 
-class AdministratorModelView(ModelView):
+class AdministratorModelView(CustomModelView):
 
     def is_accessible(self):
         return 'view_administrators' in current_user.get_permissions()
-
-    def inaccessible_callback(self, name, **kwargs):
-        raise Forbidden('You do not have required permission')
 
     @property
     def can_create(self):
@@ -90,7 +89,7 @@ class TransactionDateFilter(filters.FilterConverter):
 
 
 
-class TransactionModelView(ModelView):
+class TransactionModelView(CustomModelView):
 
     column_searchable_list = ['seller.first_name', 'seller.last_name', 'seller.email', 'buyer.first_name', 'buyer.last_name', 'buyer.email', 'description']
     form_excluded_columns = ['categories', 'creation_time', 'status_update_time', 'transaction_type', 'transaction_status']
@@ -104,9 +103,6 @@ class TransactionModelView(ModelView):
 
     def is_accessible(self):
         return 'view_transactions' in current_user.get_permissions()
-
-    def inaccessible_callback(self, name, **kwargs):
-        raise Forbidden('You do not have required permission')
 
     @property
     def can_create(self):
@@ -131,13 +127,10 @@ class TransactionInquiryView(BaseView):
             pass
         return self.render('transaction_inquiry.html')
 
-class RoleModelView(ModelView):
+class RoleModelView(CustomModelView):
 
     def is_accessible(self):
         return 'view_roles' in current_user.get_permissions()
-
-    def inaccessible_callback(self, name, **kwargs):
-        raise Forbidden('You do not have required permission')
 
     @property
     def can_create(self):
