@@ -92,3 +92,22 @@ SELECT *
 FROM transaction_history(9);
 
 
+SELECT date, seller_id, buyer_id, credit, debit, SUM(amount) OVER ( ORDER BY date )
+FROM (SELECT t.status_update_time AS date,
+             t.seller_id,
+             t.buyer_id,
+             t.amount as credit,
+             NULL as debit,
+             t.amount
+      FROM transactions t
+      WHERE t.seller_id = 9
+      UNION ALL
+      SELECT t.status_update_time AS date,
+             t.seller_id,
+             t.buyer_id,
+             NULL as credit,
+             t.amount AS debit,
+             -t.amount
+      FROM transactions t
+      WHERE t.buyer_id = 9) ss
+ORDER BY date;
