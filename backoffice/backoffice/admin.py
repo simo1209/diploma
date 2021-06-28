@@ -96,7 +96,7 @@ class TransactionDateFilter(filters.FilterConverter):
 class TransactionModelView(ModelView):
 
     column_searchable_list = ['seller.first_name', 'seller.last_name', 'seller.email', 'buyer.first_name', 'buyer.last_name', 'buyer.email', 'description']
-    form_excluded_columns = ['categories', 'creation_time', 'status_update_time']
+    form_excluded_columns = ['categories', 'creation_time', 'status_update_time', 'transaction_type', 'transaction_status']
 
     column_filters = ['amount', 'status_update_time']
 
