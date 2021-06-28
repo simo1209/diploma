@@ -1,5 +1,16 @@
-CREATE TRIGGER execute_payment_trigger BEFORE UPDATE ON transactions FOR EACH ROW EXECUTE PROCEDURE execute_payment();
-CREATE TRIGGER administrative_transaction_trigger BEFORE INSERT ON transactions FOR EACH ROW EXECUTE PROCEDURE administrative_transaction();
+CREATE OR REPLACE FUNCTION is_payment(transaction_id integer) RETURNS BOOLEAN AS
+$$
+BEGIN
+    RETURN EXISTS(SELECT transaction_type_id
+                  FROM transactions
+                           JOIN transaction_type ON transactions.transaction_type_id = transaction_type.id
+                  WHERE transactions.id = transaction_id
+                    AND transaction_type.type = 'payment');
+END
+$$
+    LANGUAGE plpgsql;
+
+SELECT is_payment(50229);
 
 CREATE OR REPLACE FUNCTION transaction_history(account_id integer)
     RETURNS TABLE
@@ -38,7 +49,7 @@ BEGIN
                  LEFT JOIN accounts s on t.seller_id = s.id
         WHERE t.seller_id = account_id;
 END;
-$$ LANGUAGE PLPGSQL
+$$ LANGUAGE PLPGSQL;
 
 
 CREATE TABLE transactions_history
