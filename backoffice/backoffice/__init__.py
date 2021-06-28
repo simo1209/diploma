@@ -32,7 +32,7 @@ login_manager.login_view = "administrator.login"
 login_manager.login_message_category = 'danger'
 
 from backoffice.models import Account, Administrator, Role, Transaction
-from backoffice.admin import AccountModelView, TransactionModelView, AdministratorModelView, RoleModelView
+from backoffice.admin import AccountModelView, TransactionModelView,TransactionInquiryView, AdministratorModelView, RoleModelView
 
 
 admin = Admin(app, endpoint='admin', template_mode='bootstrap3', url='/admin')
@@ -40,7 +40,8 @@ admin = Admin(app, endpoint='admin', template_mode='bootstrap3', url='/admin')
 admin.add_view(AdministratorModelView(Administrator, db.session, endpoint='/admin_admins'))
 admin.add_view(RoleModelView(Role, db.session, endpoint='/admin_roles'))
 admin.add_view(AccountModelView(Account, db.session, endpoint='/admin_accnts'))
-admin.add_view(TransactionModelView(Transaction, db.session, endpoint='/admin_trans'))
+admin.add_view(TransactionModelView(Transaction, db.session, endpoint='/admin_trans', category='Transactions'))
+admin.add_view(TransactionInquiryView(endpoint='/admin_trans_inq', category='Transactions'))
 
 @login_manager.user_loader
 def load_user(administrator_id):

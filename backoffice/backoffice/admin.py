@@ -2,6 +2,7 @@
 from re import T
 from flask.globals import request
 from flask_admin import expose
+from flask_admin import BaseView
 from flask_admin.contrib.sqla import ModelView, filters
 from flask_admin.model.template import TemplateLinkRowAction
 from flask_admin.model.template import EndpointLinkRowAction
@@ -34,14 +35,10 @@ class AccountModelView(ModelView):
     def history_view(self):
         
         args = dict(request.args)
-        print(args['id'])
-
         id = args['id']
         
         result = db.session.execute('SELECT * FROM transaction_history(:val)', {'val': id})
-        print(result)
         rows = [row for row in result]
-        print(rows)
 
         return self.render('transaction_history.html', rows=rows)
 
@@ -123,6 +120,17 @@ class TransactionModelView(ModelView):
     def can_export(self):
         return 'export_transactions' in current_user.get_permissions()
 
+
+class TransactionInquiryView(BaseView):
+    @expose('/', methods=['GET','POST'])
+    def inquiry(self):
+        if request.method == 'POST':
+            # Inquiry query
+            # if request.form['begin-date'] and request.form['end-date']:
+                # result = db.session.execute('SELECT * FROM transactions')
+            pass
+        return self.render('transaction_inquiry.html')
+
 class RoleModelView(ModelView):
 
     def is_accessible(self):
@@ -140,33 +148,3 @@ class RoleModelView(ModelView):
         return 'edit_roles' in current_user.get_permissions()
 
 
-# class AccountModelView(ModelView):
-
-#     can_create = False
-
-#     column_exclude_list = ['password']
-#     form_excluded_columns = ['balance', 'password', 'registered_on', 'is_admin']
-
-
-#     def is_accessible(self):
-#         return current_user.is_authenticated
-
-#     def inaccessible_callback(self, name, **kwargs):
-#         raise Unauthorized('Please log in')
-
-# class TransactionModelView(ModelView):
-
-#     can_edit = False
-#     can_export = True
-#     can_delete = False
-
-#     form_excluded_columns = ['buyer', 'status', 'creation_time']
-#     filter_converter = TransactionDateFilter()
-#     column_filters = ['creation_time', 'transaction_type', 'transaction_status']
-
-
-#     def is_accessible(self):
-#         return current_user.is_authenticated
-
-#     def inaccessible_callback(self, name, **kwargs):
-#         raise Unauthorized('Please log in')
