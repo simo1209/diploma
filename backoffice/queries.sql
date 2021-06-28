@@ -10,6 +10,44 @@ END
 $$
     LANGUAGE plpgsql;
 
+CREATE TRIGGER handle_funds_transfer_trigger
+    BEFORE INSERT
+    ON transactions
+    FOR EACH ROW
+EXECUTE FUNCTION handle_funds_transfer();
+
+CREATE OR REPLACE FUNCTION handle_funds_transfer() RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    IF NOT is_payment(new.id) THEN
+        IF new.buyer_id IS NOT NULL THEN
+            new.transaction_type_id = (SELECT id FROM transaction_type WHERE type = 'withdraw');
+
+        ELSIF new.seller_id IS NOT NULL THEN
+            new.transaction_type_id = (SELECT id FROM transaction_type WHERE type = 'deposit');
+
+        end if;
+        new.transaction_status_id = (SELECT id FROM transaction_status WHERE status = 'completed');
+    END IF;
+    new.status_update_time = NOW();
+    RETURN new;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION is_completed(transaction_id integer) RETURNS BOOLEAN AS
+$$
+BEGIN
+    RETURN EXISTS(SELECT transaction_type_id
+                  FROM transactions
+                           JOIN transaction_status ON transactions.transaction_status_id = transaction_status.id
+                  WHERE transactions.id = transaction_id
+                    AND transaction_status.status = 'completed');
+END
+$$
+    LANGUAGE plpgsql;
+
 SELECT is_payment(50229);
 
 CREATE OR REPLACE FUNCTION transaction_history(account_id integer)
