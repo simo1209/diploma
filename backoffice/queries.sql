@@ -24,10 +24,10 @@ BEGIN
     IF NOT is_payment(new.id) THEN
         IF new.buyer_id IS NOT NULL THEN
             new.transaction_type_id = (SELECT id FROM transaction_type WHERE type = 'withdraw');
-
+            UPDATE accounts SET balance = balance - new.amount;
         ELSIF new.seller_id IS NOT NULL THEN
             new.transaction_type_id = (SELECT id FROM transaction_type WHERE type = 'deposit');
-
+            UPDATE accounts SET balance = balance + new.amount;
         end if;
         new.transaction_status_id = (SELECT id FROM transaction_status WHERE status = 'completed');
     END IF;
