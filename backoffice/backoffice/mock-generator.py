@@ -35,7 +35,7 @@ for i in range(n):
 
 # start = perf_counter()
 # for i in range(n):
-    # cur.execute("INSERT INTO transactions(buyer_id, amount, description, transaction_type_id, transaction_status_id) VALUES (%s, 249000, 'Deposit into account', 2, 2);", (i+1,))
+    # cur.execute("INSERT INTO transactions(seller_id, amount, description, transaction_type_id, transaction_status_id) VALUES (%s, 249000, 'Deposit into account', 2, 2);", (i+1,))
 # end = perf_counter()
 # print(end-start)
 
