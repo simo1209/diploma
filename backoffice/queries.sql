@@ -31,10 +31,36 @@ BEGIN
         end if;
         new.transaction_status_id = (SELECT id FROM transaction_status WHERE status = 'completed');
     END IF;
+    IF new.status_update_time IS NULL THEN
+        new.status_update_time = NOW();
+    END IF;
+    RETURN new;
+END;
+$$;
+
+CREATE TRIGGER handle_payment_trigger
+    BEFORE UPDATE
+    ON transactions
+    FOR EACH ROW
+EXECUTE FUNCTION handle_payment();
+
+CREATE OR REPLACE FUNCTION handle_payment() RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    IF is_payment(new.id) THEN
+        IF new.buyer_id IS NOT NULL AND new.seller_id IS NOT NULL THEN
+            UPDATE accounts SET balance = balance + new.amount WHERE accounts.id = new.seller_id;
+            UPDATE accounts SET balance = balance - new.amount WHERE accounts.id = new.buyer_id;
+        END IF;
+        new.transaction_status_id = (SELECT id FROM transaction_status WHERE status = 'completed');
+    END IF;
     new.status_update_time = NOW();
     RETURN new;
 END;
 $$;
+
 
 CREATE OR REPLACE FUNCTION is_completed(transaction_id integer) RETURNS BOOLEAN AS
 $$
@@ -48,7 +74,7 @@ END
 $$
     LANGUAGE plpgsql;
 
-SELECT is_payment(50229);
+DROP FUNCTION transaction_history(account_id integer);
 
 CREATE OR REPLACE FUNCTION transaction_history(account_id integer)
     RETURNS TABLE
@@ -56,58 +82,58 @@ CREATE OR REPLACE FUNCTION transaction_history(account_id integer)
                 date         TIMESTAMP,
                 counterparty TEXT,
                 description  TEXT,
-                debit        NUMERIC,
                 credit       NUMERIC,
+                debit        NUMERIC,
                 balance      NUMERIC
             )
 AS
 $$
 BEGIN
     RETURN QUERY
-        SELECT t.creation_time                                                  AS date,
-               CONCAT(s.first_name, ' ', s.last_name)                           AS counterparty,
-               t.description                                                    AS description,
-               t.amount                                                         AS debit,
-               NULL                                                             AS credit,
-               LAG(t.amount, 1, 0.0) OVER (ORDER BY t.creation_time) - t.amount AS balance
-        FROM transactions AS t
-                 LEFT JOIN accounts b on t.buyer_id = b.id
-                 LEFT JOIN accounts s on t.seller_id = s.id
-        WHERE t.buyer_id = account_id
-        UNION ALL
-        SELECT t.creation_time                                                  AS date,
-               CONCAT(b.first_name, ' ', b.last_name)                           AS counterparty,
-               t.description                                                    AS description,
-               NULL                                                             AS debit,
-               t.amount                                                         AS credit,
-               LAG(t.amount, 1, 0.0) OVER (ORDER BY t.creation_time) + t.amount AS balance
-        FROM transactions AS t
-                 LEFT JOIN accounts b on t.buyer_id = b.id
-                 LEFT JOIN accounts s on t.seller_id = s.id
-        WHERE t.seller_id = account_id;
+        SELECT _date,
+               _counterparty,
+               _description,
+               _credit,
+               _debit,
+               SUM(_amount) OVER ( ORDER BY _date ) as _balance
+        FROM (SELECT t.status_update_time                                          AS _date,
+                     COALESCE(b.first_name || ' ' || b.last_name, 'Cash Register') as _counterparty,
+                     t.description                                                 as _description,
+                     t.amount                                                      as _credit,
+                     0                                                             as _debit,
+                     t.amount                                                      as _amount
+              FROM transactions t
+                       LEFT JOIN accounts b on t.buyer_id = b.id
+                       LEFT JOIN accounts s on t.seller_id = s.id
+              WHERE t.seller_id = account_id
+              UNION ALL
+              SELECT t.status_update_time                                          AS _date,
+                     COALESCE(s.first_name || ' ' || s.last_name, 'Cash Register') as _counterparty,
+                     t.description                                                 as _description,
+                     0                                                             as _credit,
+                     t.amount                                                      AS _debit,
+                     -t.amount                                                     as _amount
+              FROM transactions t
+                       LEFT JOIN accounts b on t.buyer_id = b.id
+                       LEFT JOIN accounts s on t.seller_id = s.id
+              WHERE t.buyer_id = account_id) ss
+        ORDER BY _date;
 END;
 $$ LANGUAGE PLPGSQL;
 
-SELECT *
-FROM transaction_history(9);
+DROP VIEW transaction_inquiry;
+CREATE OR REPLACE VIEW transaction_inquiry AS
+SELECT t.id,
+       t.status_update_time::timestamp(0),
+       t_s.status,
+       t_t.type,
+       t.amount,
+       t.description,
+       b.first_name || ' ' || b.last_name AS buyer_name,
+       s.first_name || ' ' || s.last_name AS seller_name
+FROM transactions t
+         JOIN transaction_status t_s ON t.transaction_status_id = t_s.id
+         JOIN transaction_type t_t ON t_t.id = t.transaction_type_id
+         JOIN accounts b ON b.id = t.buyer_id
+         JOIN accounts s ON s.id = t.seller_id;
 
-
-SELECT date, seller_id, buyer_id, credit, debit, SUM(amount) OVER ( ORDER BY date )
-FROM (SELECT t.status_update_time AS date,
-             t.seller_id,
-             t.buyer_id,
-             t.amount as credit,
-             NULL as debit,
-             t.amount
-      FROM transactions t
-      WHERE t.seller_id = 9
-      UNION ALL
-      SELECT t.status_update_time AS date,
-             t.seller_id,
-             t.buyer_id,
-             NULL as credit,
-             t.amount AS debit,
-             -t.amount
-      FROM transactions t
-      WHERE t.buyer_id = 9) ss
-ORDER BY date;
