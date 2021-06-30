@@ -42,7 +42,7 @@ class AccountModelView(CustomModelView):
         args = dict(request.args)
         id = args['id']
         
-        result = db.session.execute('SELECT * FROM transaction_history(:val)', {'val': id})
+        result = db.session.execute('SELECT * FROM transaction_history(:val) ORDER BY date', {'val': id})
         rows = [row for row in result]
 
         return self.render('transaction_history.html', rows=rows)
@@ -121,10 +121,12 @@ class TransactionInquiryView(BaseView):
     @expose('/', methods=['GET','POST'])
     def inquiry(self):
         if request.method == 'POST':
-            # Inquiry query
-            # if request.form['begin-date'] and request.form['end-date']:
-                # result = db.session.execute('SELECT * FROM transactions')
-            pass
+            if request.form['begin_date'] and request.form['end_date']:
+                begin_date, end_date = request.form.get('begin_date'), request.form.get('end_date')
+                print(begin_date, end_date)
+                
+                result = db.session.execute('SELECT * FROM transaction_inquiry WHERE status_update_time BETWEEN date :begin_date AND date :end_date LIMIT 20;', {'begin_date':begin_date, 'end_date':end_date} )
+                return self.render('transaction_inquiry.html', begin_date = begin_date, end_date = end_date, transactions = result)
         return self.render('transaction_inquiry.html')
 
 class RoleModelView(CustomModelView):
