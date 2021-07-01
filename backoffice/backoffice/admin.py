@@ -123,15 +123,25 @@ class TransactionInquiryView(BaseView):
         if request.method == 'POST':
             if request.form['begin_date'] and request.form['end_date']:
                 begin_date, end_date = request.form.get('begin_date'), request.form.get('end_date')
-                print(begin_date, end_date)
                 
-                result = db.session.execute('SELECT * FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date + interval \'1 day\' LIMIT 30;', {'begin_date':begin_date, 'end_date':end_date} )
-                # if request.args.get('page'):
-                    # page = int(request.args.get('page'))
-                    # print(page)
-                    # result = db.session.execute('SELECT * FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date LIMIT 30 OFFSET :page;', {'begin_date':begin_date, 'end_date':end_date, 'page':page} )
+                aggregation = request.form.get('aggregation')
+                if aggregation == 'day':
+                    result = db.session.execute('SELECT date_trunc(\'day\', creation_time)::date as date, count(*) FROM transactions WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY date_trunc(\'day\', creation_time) LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
+                elif aggregation == 'month':
+                    result = db.session.execute('SELECT date_trunc(\'month\', creation_time)::date as date, count(*) FROM transactions WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY date_trunc(\'month\', creation_time) LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
+                elif aggregation == 'year':
+                    result = db.session.execute('SELECT date_trunc(\'year\', creation_time)::date as date, count(*) FROM transactions WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY date_trunc(\'year\', creation_time) LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
+                elif aggregation == 'type':
+                    result = db.session.execute('SELECT type, count(*) FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY type LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
+                elif aggregation == 'status':
+                    result = db.session.execute('SELECT status, count(*) FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY status LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
+                elif aggregation == 'amount':
+                    result = db.session.execute('SELECT amount, count(*) FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY amount LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
+                else:
+                    result = db.session.execute('SELECT * FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date + interval \'1 day\' LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
+                    return self.render('transaction_inquiry.html', begin_date = begin_date, end_date = end_date, transactions = result)
                 
-                return self.render('transaction_inquiry.html', begin_date = begin_date, end_date = end_date, transactions = result)
+                return self.render('transaction_inquiry.html', begin_date = begin_date, end_date = end_date, aggregations = result, aggregation=aggregation)
         return self.render('transaction_inquiry.html')
 
 class RoleModelView(CustomModelView):

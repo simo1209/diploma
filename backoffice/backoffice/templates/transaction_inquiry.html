@@ -6,13 +6,25 @@
 
 <form method="POST">
     <div class="row">
-        <div class="form-group col-xs-6">
+        <div class="form-group col-xs-5">
             <label for="begin_date">Begin Date:</label>
             <input type="date" class="form-control" name="begin_date" id="begin_date" value="{{ begin_date }}">
         </div>
-        <div class="form-group col-xs-6">
+        <div class="form-group col-xs-5">
             <label for="end_date">End Date:</label>
             <input type="date" class="form-control" name="end_date" id="end_date" value="{{ end_date }}">
+        </div>
+        <div class="form-group col-xs-2">
+            <label for="aggregation">Group By:</label>
+            <select class="form-select col" aria-label="Default select example" name="aggregation" id="aggregation">
+                <option selected>None</option>
+                <option value="day" {{ 'selected' if aggregation == 'day' }}>Day</option>
+                <option value="month" {{ 'selected' if aggregation == 'month' }}>Month</option>
+                <option value="year" {{ 'selected' if aggregation == 'year' }}>Year</option>
+                <option value="type" {{ 'selected' if aggregation == 'type' }}>Type</option>
+                <option value="status" {{ 'selected' if aggregation == 'status' }}>Status</option>
+                <option value="amount" {{ 'selected' if aggregation == 'amount' }}>Amount</option>
+            </select>
         </div>
     </div>
     <div class="row">
@@ -39,7 +51,7 @@
             <td>{{ transaction[1] }}</td>
             <td>{{ transaction[2] }}</td>
             <td>{{ transaction[3] }}</td>
-            <td style="text-align: right;">{{ transaction[4] }}</td>
+            <td style="text-align: right;">{{ "%.2f лв."|format(transaction[4]) }}</td>
             <td>{{ transaction[5] }}</td>
             <td>{{ transaction[6] }}</td>
             <td>{{ transaction[7] }}</td>
@@ -47,16 +59,29 @@
         {% endfor %}
     </tbody>
 </table>
-<!-- <nav aria-label="Page navigation example">
-    <ul class="pagination">
-      <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-      <li class="page-item"><a class="page-link" href="#">1</a></li>
-      <li class="page-item"><a class="page-link" href="#">2</a></li>
-      <li class="page-item"><a class="page-link" href="#">3</a></li>
-      <li class="page-item"><a class="page-link" href="#">Next</a></li>
-    </ul>
-  </nav> -->
 {% endif %}
+
+
+
+{% if aggregations %}
+
+<table class="table table-striped table-bordered table-hover model-list">
+    <thead>
+        <th>{{aggregation.upper()}}</th>
+        <th>Count</th>
+    </thead>
+    <tbody>
+        {% for transaction in aggregations %}
+        <tr>
+            <th>{{ transaction[0] }}</th>
+            <td>{{ transaction[1] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endif %}
+
 </div>
 
 {% endblock %}

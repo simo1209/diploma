@@ -86,8 +86,6 @@ $$
 DROP FUNCTION IF EXISTS transaction_history(account_id integer);
 
 
-DROP VIEW transaction_history;
-
 DROP VIEW IF EXISTS transaction_inquiry;
 
 
@@ -103,10 +101,17 @@ SELECT t.id,
        s.first_name AS seller_first_name,
        s.last_name  AS seller_last_name
 FROM transactions t
-         JOIN transaction_status t_s ON t.transaction_status_id = t_s.id
-         JOIN transaction_type t_t ON t_t.id = t.transaction_type_id
-         JOIN accounts b ON b.id = t.buyer_id
-         JOIN accounts s ON s.id = t.seller_id;
+         LEFT JOIN transaction_status t_s ON t.transaction_status_id = t_s.id
+         LEFT JOIN transaction_type t_t ON t_t.id = t.transaction_type_id
+         LEFT JOIN accounts b ON b.id = t.buyer_id
+         LEFT JOIN accounts s ON s.id = t.seller_id;
+
+SELECT * from transactions WHERE creation_time BETWEEN DATE '2021-06-28' AND date '2021-06-29' LIMIT 15;
+
+SELECT *
+FROM transaction_inquiry
+WHERE creation_time BETWEEN DATE '2021-06-28' AND date '2021-06-29' LIMIT 15;
+
 
 
 SELECT _date,
@@ -138,4 +143,7 @@ FROM (SELECT t.creation_time AS _date,
       FROM transactions t
                LEFT JOIN accounts b ON t.buyer_id = b.id
                LEFT JOIN accounts s ON t.seller_id = s.id
-      WHERE t.buyer_id = 9) th ORDER BY _date;
+      WHERE t.buyer_id = 9) th
+ORDER BY _date;
+
+SELECT balance FROM accounts WHERE id = 9;
