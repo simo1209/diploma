@@ -140,11 +140,6 @@ class TransactionType(db.Model):
 # db.session.commit()
 
 transactions_categories = db.Table('transactions_categories',
-    db.Column('transaction_id', db.Integer, db.ForeignKey('transactions.id'), primary_key=True),
-    db.Column('category_id', db.Integer, db.ForeignKey('categories.id'), primary_key=True)
-)
-
-transactions_categories = db.Table('transactions_categories',
     db.Column('transaction_id', db.BigInteger, db.ForeignKey('transactions.id'), primary_key=True),
     db.Column('category_id', db.BigInteger, db.ForeignKey('categories.id'), primary_key=True)
 )
