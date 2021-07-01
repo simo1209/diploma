@@ -6,7 +6,7 @@ class Role(db.Model):
     
     __tablename__ = 'roles'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     permissions = db.relationship('Permission', secondary='roles_permissons')
 
@@ -19,13 +19,13 @@ class Role(db.Model):
 
 class RolePermissions(db.Model):
     __tablename__ = 'roles_permissons'
-    role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True)
-    permission_id = db.Column(db.Integer(), db.ForeignKey('permissions.id', ondelete='CASCADE'), primary_key=True)
+    role_id = db.Column(db.BigInteger(), db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True)
+    permission_id = db.Column(db.BigInteger(), db.ForeignKey('permissions.id', ondelete='CASCADE'), primary_key=True)
 
 
 class Permission(db.Model):
     __tablename__ = 'permissions'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     name = db.Column(db.Text, unique=True, nullable=False)
 
     def __init__(self, name):
@@ -36,20 +36,20 @@ class Permission(db.Model):
 
 class AdministratorRoles(db.Model):
     __tablename__ = 'admins_roles'
-    admin_id = db.Column(db.Integer(), db.ForeignKey('admins.id', ondelete='CASCADE'), primary_key=True)
-    role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True)
+    admin_id = db.Column(db.BigInteger(), db.ForeignKey('admins.id', ondelete='CASCADE'), primary_key=True)
+    role_id = db.Column(db.BigInteger(), db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True)
 
 class Administrator(db.Model):
     
     __tablename__ = 'admins'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, unique=False, nullable=False)
     password = db.Column(db.Text, nullable=False)
     login_attempts = db.Column(
-        db.Integer, nullable=False, server_default=db.text('0'))
+        db.BigInteger, nullable=False, server_default=db.text('0'))
     registered_on = db.Column(
         db.DateTime, nullable=False, server_default=db.text('NOW()'))
 
@@ -67,7 +67,7 @@ class Administrator(db.Model):
         perms = []
         for role in self.roles:
             for perm in role.permissions:
-                perms.append(perm)
+                perms.append(perm.name)
         return perms
 
     def is_authenticated(self):
@@ -94,7 +94,7 @@ class Company(db.Model):
 
     __tablename__ = 'companies'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     email = db.Column(db.Text, unique=True, nullable=False)
     accounts = db.relationship('Account', backref='companies', lazy=True)
 
@@ -102,15 +102,15 @@ class Category(db.Model):
 
     __tablename__ = 'categories'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     name = db.Column(db.Text, unique=False, nullable=False)
 
-    creator_account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'),
+    creator_account_id = db.Column(db.BigInteger, db.ForeignKey('accounts.id'),
         nullable=False)
 
 class Address(db.Model):
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     address_1 = db.Column(db.Text, nullable=False)
     address_2 = db.Column(db.Text)
     city = db.Column(db.Text, nullable=False)
@@ -124,24 +124,24 @@ class Address(db.Model):
         self.postal_code = postal_code
 
     def __repr__(self):
-        return '<Address {0}>'.format(self.address_1)
+        return '<Address {0}, {1}, {2}>'.format(self.country, self.city, self.address_1)
 
 
 class Account(db.Model):
 
     __tablename__ = 'accounts'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
     login_attempts = db.Column(
-        db.Integer, nullable=False, server_default=db.text('0'))
+        db.BigInteger, nullable=False, server_default=db.text('0'))
     registered_on = db.Column(
         db.DateTime, nullable=False, server_default=db.text('NOW()'))
     phone = db.Column(db.String(10), nullable=False)
-    address_id = db.Column(db.Integer, db.ForeignKey('address.id'),
+    address_id = db.Column(db.BigInteger, db.ForeignKey('address.id'),
                            nullable=False)
     address = db.relationship('Address',
                               backref=db.backref('accounts', lazy=True))
@@ -150,7 +150,7 @@ class Account(db.Model):
     balance = db.Column(db.Numeric, db.CheckConstraint(
         'balance>=0'), nullable=False, server_default=db.text('0'))
 
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'),
+    company_id = db.Column(db.BigInteger, db.ForeignKey('companies.id'),
         nullable=True)
 
     categories = db.relationship('Category', backref='categories', lazy=True)
@@ -187,7 +187,7 @@ class Account(db.Model):
 
 class TransactionStatus(db.Model):
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     status = db.Column(db.Text, nullable=False, unique=True)
 
     def __init__(self, status):
@@ -208,7 +208,7 @@ class TransactionStatus(db.Model):
 
 class TransactionType(db.Model):
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     type = db.Column(db.Text, nullable=False, unique=True)
 
     def __init__(self, type):
@@ -228,33 +228,33 @@ class TransactionType(db.Model):
 # db.session.commit()
 
 transactions_categories = db.Table('transactions_categories',
-    db.Column('transaction_id', db.Integer, db.ForeignKey('transactions.id'), primary_key=True),
-    db.Column('category_id', db.Integer, db.ForeignKey('categories.id'), primary_key=True)
+    db.Column('transaction_id', db.BigInteger, db.ForeignKey('transactions.id'), primary_key=True),
+    db.Column('category_id', db.BigInteger, db.ForeignKey('categories.id'), primary_key=True)
 )
 
 class Transaction(db.Model):
 
     __tablename__ = 'transactions'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    seller_id = db.Column(db.Integer, db.ForeignKey(
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    seller_id = db.Column(db.BigInteger, db.ForeignKey(
         'accounts.id'), nullable=True)
     seller = db.relationship(
         'Account', foreign_keys=[seller_id])
-    buyer_id = db.Column(db.Integer,  db.CheckConstraint('buyer_id!=seller_id'), db.ForeignKey(
+    buyer_id = db.Column(db.BigInteger,  db.CheckConstraint('buyer_id!=seller_id'), db.ForeignKey(
         'accounts.id'), nullable=True)
     buyer = db.relationship(
         'Account', foreign_keys=[buyer_id])
     amount = db.Column(db.Numeric, db.CheckConstraint(
         'amount>0'), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    transaction_status_id = db.Column(db.Integer, db.ForeignKey('transaction_status.id'),
-                                      nullable=False)
+    transaction_status_id = db.Column(db.BigInteger, db.ForeignKey('transaction_status.id'),
+                                      nullable=True)
     transaction_status = db.relationship('TransactionStatus',
                                          backref=db.backref('transaction_status', lazy=True))
 
-    transaction_type_id = db.Column(db.Integer, db.ForeignKey('transaction_type.id'),
-                                    nullable=False)
+    transaction_type_id = db.Column(db.BigInteger, db.ForeignKey('transaction_type.id'),
+                                    nullable=True)
     transaction_type = db.relationship('TransactionType',
                                        backref=db.backref('transaction_type', lazy=True))
 
@@ -263,16 +263,14 @@ class Transaction(db.Model):
     status_update_time = db.Column(
         db.DateTime, nullable=True)
 
-    categoriess = db.relationship('Category', secondary=transactions_categories, lazy='subquery',
+    categories = db.relationship('Category', secondary=transactions_categories, lazy='subquery',
         backref=db.backref('transactions', lazy=True))
 
-    def __init__(self, seller, amount, description, status, type):
+    def __init__(self, seller, amount, description, t_status, t_type):
         self.seller = seller
         self.amount = amount
         self.description = description
-        self.transaction_status = status
-        self.transaction_type = type
-
-
+        self.transaction_status = t_status
+        self.transaction_type = t_type
 
 db.create_all()
