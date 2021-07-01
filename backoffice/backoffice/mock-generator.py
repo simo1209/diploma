@@ -46,7 +46,7 @@ def gen_data():
     k = 50000
     queries = []
     for i in range(n+1):
-        year = 2020
+        year = 2021
         month = random.randint(1,12)
         day = random.randint(1, 28)
         hour = random.randint(0,23)
