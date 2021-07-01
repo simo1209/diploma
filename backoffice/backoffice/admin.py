@@ -125,7 +125,12 @@ class TransactionInquiryView(BaseView):
                 begin_date, end_date = request.form.get('begin_date'), request.form.get('end_date')
                 print(begin_date, end_date)
                 
-                result = db.session.execute('SELECT * FROM transaction_inquiry WHERE status_update_time BETWEEN date :begin_date AND date :end_date LIMIT 20;', {'begin_date':begin_date, 'end_date':end_date} )
+                result = db.session.execute('SELECT * FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date + interval \'1 day\' LIMIT 30;', {'begin_date':begin_date, 'end_date':end_date} )
+                # if request.args.get('page'):
+                    # page = int(request.args.get('page'))
+                    # print(page)
+                    # result = db.session.execute('SELECT * FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date LIMIT 30 OFFSET :page;', {'begin_date':begin_date, 'end_date':end_date, 'page':page} )
+                
                 return self.render('transaction_inquiry.html', begin_date = begin_date, end_date = end_date, transactions = result)
         return self.render('transaction_inquiry.html')
 
