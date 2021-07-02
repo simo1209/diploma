@@ -122,18 +122,18 @@ class TransactionInquiryView(BaseView):
     @expose('/', methods=['GET','POST'])
     def inquiry(self):
         group_fields = {
-            'day':'to_char(creation_time, \'YYYY-MM-DD\')',
-            'month':'to_char(creation_time, \'YYYY-MM\')',
             'year':'to_char(creation_time, \'YYYY\')',
+            'month':'to_char(creation_time, \'YYYY-MM\')',
+            'day':'to_char(creation_time, \'YYYY-MM-DD\')',
             'type':'type',
             'status':'status',
             'amount':'amount'
         }
 
         filter_fields = {
-            'day': 'to_char(creation_time, \'YYYY-MM-DD\') = :day',
-            'month': 'to_char(creation_time, \'YYYY-MM\') = :month',
             'year': 'to_char(creation_time, \'YYYY\') = :year',
+            'month': 'to_char(creation_time, \'YYYY-MM\') = :month',
+            'day': 'to_char(creation_time, \'YYYY-MM-DD\') = :day',
             'type': 'type = :type',
             'status': 'status = :status',
             'amount': 'amount = :amount'
@@ -143,7 +143,10 @@ class TransactionInquiryView(BaseView):
             if request.form['begin_date'] and request.form['end_date']:
                 begin_date, end_date = request.form.get('begin_date'), request.form.get('end_date')
                 
-                aggregation = request.form.get('aggregation')
+                query_args = {'begin_date':begin_date, 'end_date':end_date}
+
+                aggregations = request.form.getlist('aggregations')
+
                 filter = request.form.get('filter')
                 filter_value = request.form.get('filter_value')
 
@@ -155,15 +158,15 @@ class TransactionInquiryView(BaseView):
                 inquiry_columns = '*'
                 query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} LIMIT 32;'
 
-
-                if aggregation in group_fields.keys():
-                    aggregation_columns = f'{group_fields[aggregation]}'
+                valid_aggregations = [aggregation for aggregation in aggregations if aggregation in group_fields ]
+                if valid_aggregations:
+                    groupings = [group_fields[aggregation] for aggregation in valid_aggregations]
+                    aggregation_columns = ','.join(groupings)
                     inquiry_columns = f'{aggregation_columns}, COUNT(*)'
                     query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} GROUP BY {aggregation_columns} LIMIT 32;'
 
-
-                result = db.session.execute(query, {'begin_date':begin_date, 'end_date':end_date, filter:filter_value} )
-                return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregation = aggregation, filter = filter, filter_value = filter_value)
+                result = db.session.execute(query, query_args )
+                return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregations = valid_aggregations, filter = filter, filter_value = filter_value)
 
         return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields.keys(), filter_value = 'None')
 
