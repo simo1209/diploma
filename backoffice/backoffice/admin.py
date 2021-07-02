@@ -131,7 +131,12 @@ class TransactionInquiryView(BaseView):
         }
 
         filter_fields = {
-            'type': 'type = :type'
+            'day': 'to_char(creation_time, \'YYYY-MM-DD\') = :day',
+            'month': 'to_char(creation_time, \'YYYY-MM\') = :month',
+            'year': 'to_char(creation_time, \'YYYY\') = :year',
+            'type': 'type = :type',
+            'status': 'status = :status',
+            'amount': 'amount = :amount'
         }
 
         if request.method == 'POST':
@@ -140,6 +145,7 @@ class TransactionInquiryView(BaseView):
                 
                 aggregation = request.form.get('aggregation')
                 filter = request.form.get('filter')
+                filter_value = request.form.get('filter_value')
 
                 inquiry_filters = 'creation_time >= :begin_date AND creation_time <= :end_date'
 
@@ -149,7 +155,6 @@ class TransactionInquiryView(BaseView):
                 inquiry_columns = '*'
                 query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} LIMIT 32;'
 
-                filter_value = None
 
                 if aggregation in group_fields.keys():
                     aggregation_columns = f'{group_fields[aggregation]}'
@@ -157,11 +162,10 @@ class TransactionInquiryView(BaseView):
                     query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} GROUP BY {aggregation_columns} LIMIT 32;'
 
 
-                print(query, {'begin_date':begin_date, 'end_date':end_date, filter:filter_value})
                 result = db.session.execute(query, {'begin_date':begin_date, 'end_date':end_date, filter:filter_value} )
-                return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregation = aggregation, filter = filter)
+                return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregation = aggregation, filter = filter, filter_value = filter_value)
 
-        return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields.keys())
+        return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields.keys(), filter_value = 'None')
 
 class RoleModelView(CustomModelView):
 

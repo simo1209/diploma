@@ -25,14 +25,17 @@
         </div>
     </div>
     <div class="row">
+        <label for="aggregation" class="col-xs-1">Filter By:</label>
         <div class="form-group col-xs-2">
-            <label for="aggregation">Filter By:</label>
-            <select class="form-select col form-control" name="filter" id="filter">
-                <option selected>None</option>
+            <select class="form-select col form-control" name="filter" id="filter" onchange="filterChange()" onload="filterChange()">
+                <option>None</option>
                 {% for field in filter_fields %}
                 <option value="{{ field }}" {{ 'selected' if filter == field }}>{{field.title()}}</option>
                 {% endfor %}
             </select>
+        </div>
+        <div class="form-group col-xs-5" id="filter_value_group">
+            <input type="text" class="form-control" name="filter_value" id="filter_value" value="{{ filter_value }}">
         </div>
     </div>
     <div class="row">
@@ -92,5 +95,20 @@
 {% endif %}
 </div>
 </div>
+
+<script>
+
+    document.onload(()=>{
+        let filter_select = document.getElementById('filter')
+        document.getElementById('filter_value_group').style.display = filter_select.value != 'None' ? 'block' : 'none';
+    })
+
+    function filterChange(){
+        let filter_select = document.getElementById('filter')
+        document.getElementById('filter_value_group').style.display = filter_select.value != 'None' ? 'block' : 'none';
+    }
+
+</script>
+
 
 {% endblock %}
