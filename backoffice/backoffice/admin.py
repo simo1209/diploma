@@ -8,6 +8,7 @@ from flask_admin.model.template import TemplateLinkRowAction
 from flask_admin.model.template import EndpointLinkRowAction
 
 from flask_login import current_user
+from sqlalchemy.orm import query
 from werkzeug.exceptions import Forbidden
 from backoffice import db
 from backoffice.models import Account
@@ -120,29 +121,47 @@ class TransactionModelView(CustomModelView):
 class TransactionInquiryView(BaseView):
     @expose('/', methods=['GET','POST'])
     def inquiry(self):
+        group_fields = {
+            'day':'to_char(creation_time, \'YYYY-MM-DD\')',
+            'month':'to_char(creation_time, \'YYYY-MM\')',
+            'year':'to_char(creation_time, \'YYYY\')',
+            'type':'type',
+            'status':'status',
+            'amount':'amount'
+        }
+
+        filter_fields = {
+            'type': 'type = :type'
+        }
+
         if request.method == 'POST':
             if request.form['begin_date'] and request.form['end_date']:
                 begin_date, end_date = request.form.get('begin_date'), request.form.get('end_date')
                 
                 aggregation = request.form.get('aggregation')
-                if aggregation == 'day':
-                    result = db.session.execute('SELECT date_trunc(\'day\', creation_time)::date as date, count(*) FROM transactions WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY date_trunc(\'day\', creation_time) LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
-                elif aggregation == 'month':
-                    result = db.session.execute('SELECT date_trunc(\'month\', creation_time)::date as date, count(*) FROM transactions WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY date_trunc(\'month\', creation_time) LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
-                elif aggregation == 'year':
-                    result = db.session.execute('SELECT date_trunc(\'year\', creation_time)::date as date, count(*) FROM transactions WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY date_trunc(\'year\', creation_time) LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
-                elif aggregation == 'type':
-                    result = db.session.execute('SELECT type, count(*) FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY type LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
-                elif aggregation == 'status':
-                    result = db.session.execute('SELECT status, count(*) FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY status LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
-                elif aggregation == 'amount':
-                    result = db.session.execute('SELECT amount, count(*) FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date GROUP BY amount LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
-                else:
-                    result = db.session.execute('SELECT * FROM transaction_inquiry WHERE creation_time BETWEEN date :begin_date AND date :end_date + interval \'1 day\' LIMIT 32;', {'begin_date':begin_date, 'end_date':end_date} )
-                    return self.render('transaction_inquiry.html', begin_date = begin_date, end_date = end_date, transactions = result)
-                
-                return self.render('transaction_inquiry.html', begin_date = begin_date, end_date = end_date, aggregations = result, aggregation=aggregation)
-        return self.render('transaction_inquiry.html')
+                filter = request.form.get('filter')
+
+                inquiry_filters = 'creation_time >= :begin_date AND creation_time <= :end_date'
+
+                if filter in filter_fields.keys():
+                    inquiry_filters = f'creation_time >= :begin_date AND creation_time <= :end_date AND {filter_fields[filter]}'
+
+                inquiry_columns = '*'
+                query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} LIMIT 32;'
+
+                filter_value = None
+
+                if aggregation in group_fields.keys():
+                    aggregation_columns = f'{group_fields[aggregation]}'
+                    inquiry_columns = f'{aggregation_columns}, COUNT(*)'
+                    query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} GROUP BY {aggregation_columns} LIMIT 32;'
+
+
+                print(query, {'begin_date':begin_date, 'end_date':end_date, filter:filter_value})
+                result = db.session.execute(query, {'begin_date':begin_date, 'end_date':end_date, filter:filter_value} )
+                return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregation = aggregation, filter = filter)
+
+        return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields.keys())
 
 class RoleModelView(CustomModelView):
 
