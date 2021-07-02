@@ -17,7 +17,6 @@
         <div class="form-group col-xs-2">
             <label for="aggregation">Group By:</label>
             <select class="form-select col form-control" name="aggregations" id="aggregations" multiple>
-                <option selected>None</option>
                 {% for field in group_fields %}
                 <option value="{{ field }}" {{ 'selected' if field in aggregations}}>{{field.title()}}</option>
                 {% endfor %}
@@ -83,13 +82,19 @@
         <th>{{aggregation.title()}}</th>
         {% endfor %}
         <th>Count</th>
+        <th>Sum</th>
     </thead>
     <tbody>
         {% for transaction in transactions %}
         <tr>
-            {% for column in transaction %}
-            <td>{{ column }}</td>
+            {% for column in transaction[:-1] %}
+            {% if column is iterable and (column is not string) %}
+            <td rowspan="{{column[1]}}">{{column[0]}}</td>
+            {% else %}
+            <td>{{column}}</td>
+            {% endif %}
             {% endfor %}
+            <td style="text-align: right;">{{transaction[-1]}} лв.</td>
         </tr>
         {% endfor %}
     </tbody>

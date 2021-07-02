@@ -14,6 +14,8 @@ from backoffice import db
 from backoffice.models import Account
 from flask_admin.contrib.sqla.ajax import QueryAjaxModelLoader
 
+from backoffice.utils import aggregate_result
+
 class TransactionDateFilter(filters.FilterConverter):
     datetime_filters = (
         filters.DateTimeEqualFilter,
@@ -150,7 +152,7 @@ class TransactionInquiryView(BaseView):
                 filter = request.form.get('filter')
                 filter_value = request.form.get('filter_value')
 
-                inquiry_filters = 'creation_time >= :begin_date AND creation_time <= :end_date'
+                inquiry_filters = 'creation_time >= :begin_date AND creation_time < :end_date'
 
                 if filter in filter_fields.keys():
                     inquiry_filters = f'creation_time >= :begin_date AND creation_time <= :end_date AND {filter_fields[filter]}'
@@ -162,10 +164,11 @@ class TransactionInquiryView(BaseView):
                 if valid_aggregations:
                     groupings = [group_fields[aggregation] for aggregation in valid_aggregations]
                     aggregation_columns = ','.join(groupings)
-                    inquiry_columns = f'{aggregation_columns}, COUNT(*)'
+                    inquiry_columns = f'{aggregation_columns}, COUNT(*), ROUND(SUM(amount),2 )'
                     query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} GROUP BY {aggregation_columns} LIMIT 32;'
-
-                result = db.session.execute(query, query_args )
+                    result = aggregate_result(db.session.execute(query, query_args ))
+                else:
+                    result = db.session.execute(query, query_args )
                 return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregations = valid_aggregations, filter = filter, filter_value = filter_value)
 
         return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields.keys(), filter_value = 'None')
