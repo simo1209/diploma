@@ -124,18 +124,15 @@ class TransactionInquiryView(BaseView):
     @expose('/', methods=['GET','POST'])
     def inquiry(self):
         group_fields = {
-            'year':'to_char(creation_time, \'YYYY\')',
-            'month':'to_char(creation_time, \'YYYY-MM\')',
-            'day':'to_char(creation_time, \'YYYY-MM-DD\')',
-            'type':'type',
-            'status':'status',
-            'amount':'amount'
+            'year':('time', 'to_char(creation_time, \'YYYY\')'),
+            'month':('time', 'to_char(creation_time, \'YYYY-MM\')'),
+            'day':('time', 'to_char(creation_time, \'YYYY-MM-DD\')'),
+            'type':('type','type'),
+            'status':('status','status'),
+            'amount':('amount','amount')
         }
 
         filter_fields = {
-            'year': 'to_char(creation_time, \'YYYY\') = :year',
-            'month': 'to_char(creation_time, \'YYYY-MM\') = :month',
-            'day': 'to_char(creation_time, \'YYYY-MM-DD\') = :day',
             'type': 'type = :type',
             'status': 'status = :status',
             'amount': 'amount = :amount'
@@ -160,15 +157,19 @@ class TransactionInquiryView(BaseView):
                 inquiry_columns = '*'
                 query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} LIMIT 32;'
 
-                valid_aggregations = [aggregation for aggregation in aggregations if aggregation in group_fields ]
+                valid_aggregations = []
+                aggregation_column_names = []
+                for aggregation in aggregations:
+                    if aggregation in group_fields and group_fields[aggregation][0] not in aggregation_column_names:
+                        valid_aggregations.append(aggregation)
+                        aggregation_column_names.append(group_fields[aggregation][0])
                 if valid_aggregations:
-                    groupings = [group_fields[aggregation] for aggregation in valid_aggregations]
-                    aggregation_columns = ','.join(groupings)
-                    inquiry_columns = f'{aggregation_columns}, COUNT(*), ROUND(SUM(amount),2 )'
-                    query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} GROUP BY {aggregation_columns} LIMIT 32;'
-                    result = aggregate_result(db.session.execute(query, query_args ))
-                else:
-                    result = db.session.execute(query, query_args )
+                    aggregations = [ f'{group_fields[valid][1]} as {group_fields[valid][0]}' for valid in valid_aggregations ]
+                    aggregations = ','.join(aggregations)
+                    inquiry_columns = f'{aggregations}, COUNT(*), SUM(amount)'
+                    aggregation_column_names = ','.join(aggregation_column_names)
+                    query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} GROUP BY {aggregation_column_names} LIMIT 32;'
+                result = db.session.execute(query, query_args )
                 return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregations = valid_aggregations, filter = filter, filter_value = filter_value)
 
         return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields.keys(), filter_value = 'None')
