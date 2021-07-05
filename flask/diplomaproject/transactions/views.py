@@ -34,9 +34,7 @@ def create_transaction():
         transaction = Transaction(
             Account.query.filter_by(id=current_user.id).first(),
             float(form.amount.data),
-            form.description.data,
-            TransactionStatus.query.filter_by(status='created').first(),
-            TransactionType.query.filter_by(type='payment').first()
+            form.description.data
         )
 
         db.session.add(transaction)

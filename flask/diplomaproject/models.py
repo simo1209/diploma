@@ -161,12 +161,12 @@ class Transaction(db.Model):
         'amount>0'), nullable=False)
     description = db.Column(db.Text, nullable=False)
     transaction_status_id = db.Column(db.BigInteger, db.ForeignKey('transaction_status.id'),
-                                      nullable=True)
+                                      nullable=False, server_default='1')
     transaction_status = db.relationship('TransactionStatus',
                                          backref=db.backref('transaction_status', lazy=True))
 
     transaction_type_id = db.Column(db.BigInteger, db.ForeignKey('transaction_type.id'),
-                                    nullable=True)
+                                    nullable=False, server_default='3')
     transaction_type = db.relationship('TransactionType',
                                        backref=db.backref('transaction_type', lazy=True))
 
@@ -178,12 +178,10 @@ class Transaction(db.Model):
     categories = db.relationship('Category', secondary=transactions_categories, lazy='subquery',
         backref=db.backref('transactions', lazy=True))
 
-    def __init__(self, seller, amount, description, t_status, t_type):
+    def __init__(self, seller, amount, description):
         self.seller = seller
         self.amount = amount
         self.description = description
-        self.transaction_status = t_status
-        self.transaction_type = t_type
 
 
 db.create_all()
