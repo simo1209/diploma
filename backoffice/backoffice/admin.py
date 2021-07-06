@@ -153,6 +153,7 @@ class TransactionInquiryView(BaseView):
 
                 if filter in filter_fields.keys():
                     inquiry_filters = f'creation_time >= :begin_date AND creation_time <= :end_date AND {filter_fields[filter]}'
+                    query_args[filter] = filter_value
 
                 inquiry_columns = '*'
                 query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} LIMIT 32;'
