@@ -23,7 +23,7 @@ CREATE OR REPLACE FUNCTION handle_funds_transfer() RETURNS TRIGGER
 AS
 $$
 BEGIN
-    IF NOT is_payment(new.id) THEN
+    IF new.transaction_type_id != (SELECT id FROM transaction_type WHERE type='payment') THEN
         IF new.buyer_id IS NOT NULL THEN
             new.transaction_type_id = (SELECT id FROM transaction_type WHERE type = 'withdraw');
             UPDATE accounts SET balance = balance - new.amount WHERE id = new.buyer_id;
@@ -145,5 +145,11 @@ FROM (SELECT t.creation_time AS _date,
                LEFT JOIN accounts s ON t.seller_id = s.id
       WHERE t.buyer_id = 9) th
 ORDER BY _date;
+
+CREATE OR REPLACE FUNCTION amount_range_func(numeric)
+    RETURNS numeric AS
+$$
+SELECT CAST(CEIL($1 / 100) as numeric) * 100.00;
+$$ LANGUAGE 'sql' STRICT;
 
 SELECT balance FROM accounts WHERE id = 9;

@@ -8,7 +8,6 @@ from flask_admin.model.template import TemplateLinkRowAction
 from flask_admin.model.template import EndpointLinkRowAction
 
 from flask_login import current_user
-from sqlalchemy.orm import query
 from werkzeug.exceptions import Forbidden
 from backoffice import db
 from backoffice.models import Account
@@ -129,7 +128,7 @@ class TransactionInquiryView(BaseView):
             'day':('time', 'to_char(creation_time, \'YYYY-MM-DD\')'),
             'type':('type','type'),
             'status':('status','status'),
-            'amount':('amount','amount')
+            'amount':('range','amount_range_func(amount)')
         }
 
         filter_fields = {

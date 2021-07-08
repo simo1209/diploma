@@ -98,7 +98,7 @@
                     <td>{{ transaction.time if transaction.time else 'ALL' }}</td>
                     <td>{{ transaction.status if transaction.status else 'ALL'}}</td>
                     <td>{{ transaction.type if transaction.type else 'ALL' }}</td>
-                    <td style="text-align: right;">{{ transaction.amount|round(2) if transaction.amount else 'ALL'}}</td>
+                    <td style="text-align: right;">{% if transaction.range %} {{ (transaction.range|float - 99.99)|round(2)}} - {{transaction.range}}  {% else %} ALL {% endif %}</td>
                     <td>{{ transaction.description if transaction.description else 'ALL' }}</td>
                     <td>{{ transaction.count }}</td>
                     <td style="text-align: right;">{{ transaction.sum|round(2) }} лв.</td>
