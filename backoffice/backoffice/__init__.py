@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_admin import Admin
 from flask import json, request, render_template
-
+from werkzeug.middleware.profiler import ProfilerMiddleware
 
 from backoffice.config import CustomJSONEncoder
 
@@ -62,4 +62,4 @@ def custom_error_handler(e):
 from backoffice.user.views import administrator_blueprint
 
 app.register_blueprint(administrator_blueprint)
-
+app = ProfilerMiddleware(app, profile_dir='profile_dir/')
