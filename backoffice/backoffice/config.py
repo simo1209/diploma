@@ -9,7 +9,7 @@ class CustomJSONEncoder(json.JSONEncoder): #Encode Account balance to string
 
     def default(self, obj):
         if isinstance(obj, decimal.Decimal):
-            return str(obj)
+            return float(obj)
         return super(CustomJSONEncoder, self).default(obj)
 
 class BaseConfig(object):

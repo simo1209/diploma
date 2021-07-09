@@ -1,6 +1,7 @@
 
 from re import T
 from flask.globals import request
+from flask.helpers import url_for
 from flask_admin import expose
 from flask_admin import BaseView
 from flask_admin.contrib.sqla import ModelView, filters
@@ -8,6 +9,7 @@ from flask_admin.model.template import TemplateLinkRowAction
 from flask_admin.model.template import EndpointLinkRowAction
 
 from flask_login import current_user
+from sqlalchemy.orm import query
 from werkzeug.exceptions import Forbidden
 from backoffice import db
 from backoffice.models import Account
@@ -123,56 +125,56 @@ class TransactionInquiryView(BaseView):
     @expose('/', methods=['GET','POST'])
     def inquiry(self):
         group_fields = {
-            'year':('time', 'to_char(creation_time, \'YYYY\')'),
-            'month':('time', 'to_char(creation_time, \'YYYY-MM\')'),
-            'day':('time', 'to_char(creation_time, \'YYYY-MM-DD\')'),
-            'type':('type','type'),
-            'status':('status','status'),
-            'amount':('range','amount_range_func(amount)')
+            'time_group': {'year':('time', 'to_char(creation_time, \'YYYY\')'),'month':('time', 'to_char(creation_time, \'YYYY-MM\')'),'day':('time', 'to_char(creation_time, \'YYYY-MM-DD\')')},
+            'type_group':{'all':('type','type')},
+            'status_group':{'all':('status','status')}
+            # 'amount_group':('range','amount_range_func(amount)')
         }
 
         filter_fields = {
-            'type': 'type = :type',
-            'status': 'status = :status',
-            'amount': 'amount = :amount'
+            'start_date_filter' : 'creation_time >= :start_date_filter',
+            'end_date_filter' : 'creation_time < :end_date_filter',
+            'type_filter': 'type = :type_filter',
+            'status_filter': 'status = :status_filter',
+            'min_amount_filter': 'amount >= :min_amount_filter',
+            'max_amount_filter': 'amount < :max_amount_filter'
         }
 
         if request.method == 'POST':
-            if request.form['begin_date'] and request.form['end_date']:
-                begin_date, end_date = request.form.get('begin_date'), request.form.get('end_date')
+
+            filter_keys = []
+            filter_values = []
+
+            groups = []
+
+            for key,value in request.form.items():
+                if key in filter_fields and value and value != 'none':
+                    filter_keys.append(key)
+                    filter_values.append(value)
+                if key in group_fields:
+                    if group_fields[key].get(value):
+                        groups.append(group_fields[key][value])
+
+            filter_query = ' AND '.join( [ filter_fields[filter_key] for filter_key in filter_keys ] )
+            query_args = dict(zip(filter_keys, filter_values))
+            query = ''
+            aggregations = []
+            if groups:
                 
-                query_args = {'begin_date':begin_date, 'end_date':end_date}
-
-                aggregations = request.form.getlist('aggregations')
-
-                filter = request.form.get('filter')
-                filter_value = request.form.get('filter_value')
-
-                inquiry_filters = 'creation_time >= :begin_date AND creation_time < :end_date'
-
-                if filter in filter_fields.keys():
-                    inquiry_filters = f'creation_time >= :begin_date AND creation_time <= :end_date AND {filter_fields[filter]}'
-                    query_args[filter] = filter_value
-
-                inquiry_columns = '*'
-                query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} LIMIT 32;'
-
-                valid_aggregations = []
                 aggregation_column_names = []
-                for aggregation in aggregations:
-                    if aggregation in group_fields and group_fields[aggregation][0] not in aggregation_column_names:
-                        valid_aggregations.append(aggregation)
-                        aggregation_column_names.append(group_fields[aggregation][0])
-                if valid_aggregations:
-                    aggregations = [ f'{group_fields[valid][1]} as {group_fields[valid][0]}' for valid in valid_aggregations ]
-                    aggregations = ','.join(aggregations)
-                    inquiry_columns = f'{aggregations}, COUNT(*), SUM(amount)'
-                    aggregation_column_names = ','.join(aggregation_column_names)
-                    query = f'SELECT {inquiry_columns} FROM transaction_inquiry WHERE {inquiry_filters} GROUP BY {aggregation_column_names} LIMIT 32;'
-                result = db.session.execute(query, query_args )
-                return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields, begin_date = begin_date, end_date = end_date, transactions = result, aggregations = valid_aggregations, filter = filter, filter_value = filter_value)
+                for group in groups:
+                    aggregations.append(f'{group[1]} as {group[0]}')
+                    aggregation_column_names.append(group[0])
 
-        return self.render('transaction_inquiry.html', filter_fields = filter_fields.keys(), group_fields=group_fields.keys(), filter_value = 'None')
+                aggregation_query = ', '.join(aggregations)
+                aggregation_column_query = ', '.join(aggregation_column_names)
+                query = f'SELECT {aggregation_query}, COUNT(*), SUM(amount) FROM transaction_inquiry WHERE {filter_query} GROUP BY {aggregation_column_query} LIMIT 32;'
+            else:
+                query = f'SELECT * FROM transaction_inquiry WHERE {filter_query} LIMIT 32;'
+            result = db.session.execute(query, query_args )
+            return self.render('transaction_inquiry.html', transactions = result, aggregations = aggregations)
+
+        return self.render('transaction_inquiry.html')
 
 class RoleModelView(CustomModelView):
 

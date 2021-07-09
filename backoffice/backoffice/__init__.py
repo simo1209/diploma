@@ -35,7 +35,7 @@ from backoffice.models import Account, Administrator, Role, Transaction
 from backoffice.admin import AccountModelView, TransactionModelView,TransactionInquiryView, AdministratorModelView, RoleModelView
 
 
-admin = Admin(app, endpoint='admin', template_mode='bootstrap3', url='/admin')
+admin = Admin(app, endpoint='admin', template_mode='bootstrap4', url='/admin')
 
 admin.add_view(AdministratorModelView(Administrator, db.session, endpoint='/admin_admins'))
 admin.add_view(RoleModelView(Role, db.session, endpoint='/admin_roles'))
@@ -61,5 +61,5 @@ def custom_error_handler(e):
 
 from backoffice.user.views import administrator_blueprint
 
-app.register_blueprint(administrator_blueprint)
-app = ProfilerMiddleware(app, profile_dir='profile_dir/')
+# app.register_blueprint(administrator_blueprint)
+# app = ProfilerMiddleware(app, profile_dir='profile_dir/')
