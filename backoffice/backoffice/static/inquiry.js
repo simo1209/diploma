@@ -1,4 +1,5 @@
 const form = document.querySelector('#control-form');
+$('#control-form').submit(false);
 
 document.querySelectorAll('#start_date_filter,#end_date_filter').forEach(input => {
     input.addEventListener('change', () => {
@@ -37,3 +38,36 @@ document.querySelector('#show-form').addEventListener('click', () => {
 document.querySelector('#hide-form').addEventListener('click', () => {
     form.style.display = 'none';
 })
+
+function createTable(data, keys){
+
+    let header = '<tr>'
+    $.each(keys, (counter, key)=>{
+        header+='<th>' + key + '</th>';
+    })
+    header+='</tr>';
+    $('#table-header').html(header)
+
+    let result = '';
+    $.each(data, (i, item)=>{
+        result += '<tr>'
+        for(let key of keys){
+            result+='<td>' + item[key] + '</td>';
+        }
+        result +='</tr>';
+    })
+    $('#table-body').html(result)
+}
+
+$("#control-form").submit( function () {    
+    $.ajax({   
+        type: "POST",
+        data : $(this).serialize(),
+        cache: false,  
+        url: "./fetch",   
+        success: function(data){
+            createTable(data.result, data.keys)
+        }   
+    });   
+    return false;   
+});

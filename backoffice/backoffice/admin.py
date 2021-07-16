@@ -1,5 +1,4 @@
-
-from re import T
+from flask import jsonify
 from flask.globals import request
 from flask.helpers import url_for
 from flask_admin import expose
@@ -80,17 +79,6 @@ class AdministratorModelView(CustomModelView):
     def can_edit(self):
         return 'edit_administrators' in current_user.get_permissions()
 
-class TransactionDateFilter(filters.FilterConverter):
-
-    # float_filters = (
-    #     filters.FloatGreaterFilter,
-    #     filters.FloatSmallerFilter
-    # )
-
-    datetime_filters = (
-        filters.DateTimeBetweenFilter
-    )
-
 
 
 class TransactionModelView(CustomModelView):
@@ -122,8 +110,9 @@ class TransactionModelView(CustomModelView):
 
 
 class TransactionInquiryView(BaseView):
-    @expose('/', methods=['GET','POST'])
-    def inquiry(self):
+
+    @expose('/fetch', methods=['POST'])
+    def fetch_inquiry(self):
         group_fields = {
             'time_group': {'year':('time', 'to_char(creation_time, \'YYYY\')'),'month':('time', 'to_char(creation_time, \'YYYY-MM\')'),'day':('time', 'to_char(creation_time, \'YYYY-MM-DD\')')},
             'type_group':{'all':('type','type')},
@@ -140,40 +129,44 @@ class TransactionInquiryView(BaseView):
             'max_amount_filter': 'amount < :max_amount_filter'
         }
 
-        if request.method == 'POST':
 
-            filter_keys = []
-            filter_values = []
+        filter_keys = []
+        filter_values = []
 
-            groups = []
+        groups = []
 
-            for key,value in request.form.items():
-                if key in filter_fields and value and value != 'none':
-                    filter_keys.append(key)
-                    filter_values.append(value)
-                if key in group_fields:
-                    if group_fields[key].get(value):
-                        groups.append(group_fields[key][value])
+        for key,value in request.form.items():
+            if key in filter_fields and value and value != 'none':
+                filter_keys.append(key)
+                filter_values.append(value)
+            if key in group_fields:
+                if group_fields[key].get(value):
+                    groups.append(group_fields[key][value])
 
-            filter_query = ' AND '.join( [ filter_fields[filter_key] for filter_key in filter_keys ] )
-            query_args = dict(zip(filter_keys, filter_values))
-            query = ''
-            aggregations = []
-            if groups:
-                
-                aggregation_column_names = []
-                for group in groups:
-                    aggregations.append(f'{group[1]} as {group[0]}')
-                    aggregation_column_names.append(group[0])
+        filter_query = ' AND '.join( [ filter_fields[filter_key] for filter_key in filter_keys ] )
+        query_args = dict(zip(filter_keys, filter_values))
+        query = ''
+        aggregations = []
+        if groups:
+            
+            aggregation_column_names = []
+            for group in groups:
+                aggregations.append(f'{group[1]} as {group[0]}')
+                aggregation_column_names.append(group[0])
 
-                aggregation_query = ', '.join(aggregations)
-                aggregation_column_query = ', '.join(aggregation_column_names)
-                query = f'SELECT {aggregation_query}, COUNT(*), SUM(amount) FROM transaction_inquiry WHERE {filter_query} GROUP BY {aggregation_column_query} LIMIT 32;'
-            else:
-                query = f'SELECT * FROM transaction_inquiry WHERE {filter_query} LIMIT 32;'
+            aggregation_query = ', '.join(aggregations)
+            aggregation_column_query = ', '.join(aggregation_column_names)
+            query = f'SELECT {aggregation_query}, COUNT(*), SUM(amount) FROM transaction_inquiry WHERE {filter_query} GROUP BY {aggregation_column_query} ORDER BY time LIMIT 32;'
             result = db.session.execute(query, query_args )
-            return self.render('transaction_inquiry.html', transactions = result, aggregations = aggregations)
+            return jsonify({'result': [dict(row) for row in result], 'keys': [*aggregation_column_names, 'count', 'sum']})
+        else:
+            query = f'SELECT id, to_char(creation_time, \'YYYY-MM-DD\') as time, status, type, amount, description, buyer_first_name, buyer_last_name, seller_first_name, seller_last_name FROM transaction_inquiry WHERE {filter_query} ORDER BY time LIMIT 32;'
+            result = db.session.execute(query, query_args )
+        # return self.render('transaction_inquiry.html', transactions = result, aggregations = aggregations)
+            return jsonify({'result': [dict(row) for row in result], 'keys':['id', 'time', 'status', 'type', 'amount', 'description', 'buyer_first_name', 'buyer_last_name', 'seller_first_name', 'seller_last_name']})
 
+    @expose('/', methods=['GET','POST'])
+    def inquiry(self):
         return self.render('transaction_inquiry.html')
 
 class RoleModelView(CustomModelView):

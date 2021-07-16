@@ -7,7 +7,7 @@
         <button type="button" id="show-form" class="btn btn-primary">Show</button>
         <button type="button" id="hide-form" class="btn btn-secondary">Hide</button>
     </div>
-    <form method="post" id="control-form">
+    <form method="post" id="control-form" submit="disabled">
 
         <div class="row mb-3">
             <label class="col-sm-2 col-form-label">Filter by time</label>
@@ -79,74 +79,23 @@
         </div>
         <div class="row">
             <div class="col-sm-2">
-                <button type="submit" class="btn btn-primary mb-3">Fetch Inquiry</button>
+                <button id="submit-btn" type="submit" class="btn btn-primary mb-3">Fetch Inquiry</button>
             </div>
         </div>
     </form>
 
     <div class="row">
 
-        {% if not aggregations %}
 
         <table class="table table-striped table-bordered table-hover model-list">
-            <thead>
-                <th>Transaction Id</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Description</th>
-                <th>Buyer</th>
-                <th>Seller</th>
-            </thead>
-            <tbody>
-                {% for transaction in transactions %}
-                <tr>
-                    <td>{{ transaction.id }}</th>
-                    <td>{{ transaction.creation_time }}</td>
-                    <td>{{ transaction.status }}</td>
-                    <td>{{ transaction.type }}</td>
-                    <td style="text-align: right;">{{ transaction.amount|round(2) }}</td>
-                    <td>{{ transaction.description }}</td>
-                    <td>{{ transaction.buyer_first_name }} {{ transaction.buyer_last_name }}</td>
-                    <td>{{ transaction.seller_first_name }} {{ transaction.seller_last_name }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
+            <thead id="table-header">
 
-        {% if aggregations %}
-
-        <table class="table table-striped table-bordered table-hover model-list">
-            <thead>
-                <th>Transaction Id</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Description</th>
-                <th>Count</th>
-                <th>Sum</th>
             </thead>
-            <tbody>
-                {% for transaction in transactions %}
-                <tr>
-                    <td>{{ transaction.id if transaction.id else 'ALL' }}</th>
-                    <td>{{ transaction.time if transaction.time else 'ALL' }}</td>
-                    <td>{{ transaction.status if transaction.status else 'ALL'}}</td>
-                    <td>{{ transaction.type if transaction.type else 'ALL' }}</td>
-                    <td style="text-align: right;">{% if transaction.range %} {{ (transaction.range|float -
-                        99.99)|round(2)}} - {{transaction.range}} {% else %} ALL {% endif %}</td>
-                    <td>{{ transaction.description if transaction.description else 'ALL' }}</td>
-                    <td>{{ transaction.count }}</td>
-                    <td style="text-align: right;">{{ transaction.sum|round(2) }} лв.</td>
-                </tr>
-                {% endfor %}
+            <tbody id="table-body">
+
             </tbody>
         </table>
 
-        {% endif %}
     </div>
 </div>
 
